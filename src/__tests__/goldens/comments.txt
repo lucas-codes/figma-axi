@@ -1,0 +1,8 @@
+file: AbC123xyz456
+total: 5
+resolvedHidden: 2
+comments[3]{id,parent,node,author,created,message}:
+  "107",null,null,ana,2026-10-02,"Archive page is stale, ignore it"
+  "101",null,1-12,ana,2026-09-30,Should the CTA stay disabled until terms are ticked?
+  "102","101",1-12,lucas,2026-10-01,Yes - matches the current checkout
+help[2]: Run `figma-axi comments AbC123xyz456 --resolved` to include resolved threads,Run `figma-axi inspect AbC123xyz456 --node 1-12` for the layers a comment is pinned to
