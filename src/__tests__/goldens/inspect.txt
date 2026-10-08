@@ -1,0 +1,18 @@
+file: Checkout redesign
+node: 1-2
+depth: 5
+hidden: 2
+shapesOmitted: 14
+beyondLimit: 0
+textsTruncated: 0
+nodes[9]{depth,id,type,name,size,content}:
+  0,1-2,FRAME,Cart desktop,1440x1024,null
+  1,1-5,TEXT,Title,320x40,Your cart
+  1,1-6,FRAME,Line items,1200x400,null
+  2,1-7,INSTANCE,Line item,1200x96,Cart/LineItem | Trail runner | $128.00
+  2,1-8,INSTANCE,Line item,1200x96,Cart/LineItem | Rain shell | $96.00
+  1,1-9,FRAME,Summary,400x320,null
+  2,1-10,TEXT,Tax label,200x24,Tax (13%)
+  2,1-11,TEXT,Shipping note,360x48,"Free shipping, 3-5 days"
+  2,1-12,INSTANCE,CTA,360x56,Button/Primary | Place order
+help[2]: Run `figma-axi render AbC123xyz456 --node 1-2` to see this frame,Run `figma-axi inspect AbC123xyz456 --node 1-6` to focus on one child
