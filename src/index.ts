@@ -64,7 +64,7 @@ export async function main(argv: string[], runtime: Runtime = defaultRuntime): P
     output = serialize(model);
     guard(output);
   } catch (error) {
-    const failure = error instanceof AxiError ? error : new AxiError({code: 'transport_error'}, 'Request failed', ['Check connectivity before retrying']);
+    const failure = error instanceof AxiError ? error : new AxiError({code: 'internal_error'}, 'Unexpected internal error', ['This is a figma-axi bug; re-run with --json and report the output']);
     exit = EXIT[failure.detail.code];
     output = serialize(errorModel(failure));
     try { guard(output); }

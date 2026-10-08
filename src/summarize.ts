@@ -89,9 +89,12 @@ export function summarize(root: RawNode, opts: SummaryOptions): NodeSummary {
     return false;
   }
   function text(value: string): string {
-    if (opts.textMax !== null && value.length > opts.textMax) {
-      result.counts.textsTruncated++;
-      return value.slice(0, opts.textMax);
+    if (opts.textMax !== null) {
+      const points = Array.from(value);
+      if (points.length > opts.textMax) {
+        result.counts.textsTruncated++;
+        return points.slice(0, opts.textMax).join('');
+      }
     }
     return value;
   }
