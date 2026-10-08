@@ -20,6 +20,14 @@ test('depth-first rows, rounded size, sanitized strings and unknown leaf', () =>
     {depth: 1, id: '1-5', type: 'FUTURE', name: 'Future', size: null, content: null},
   ], counts, depthCutPossible: false});
 });
+test('null bounding boxes produce literal rows with null size', () => {
+  assert.deepEqual(summarize(parseNodeTree(tree([
+    {...leaf('1:3'), absoluteBoundingBox: null},
+  ])), options), {rows: [
+    {depth: 0, id: '1-2', type: 'FRAME', name: 'Root', size: null, content: null},
+    {depth: 1, id: '1-3', type: 'RECTANGLE', name: 'RECTANGLE', size: null, content: null},
+  ], counts: {hidden: 0, shapesOmitted: 0, beyondLimit: 0, textsTruncated: 0}, depthCutPossible: false});
+});
 test('hidden subtree roots and every shape type are counted, rectangles retained', () => {
   const result = summarize(parseNodeTree(tree([
     { ...leaf('2:1', 'FRAME'), visible: false, children: [{...leaf('2:2'), visible: false}]},
