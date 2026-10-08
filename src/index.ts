@@ -6,7 +6,7 @@ import {AxiError, EXIT, errorModel} from './errors.ts';
 import {VERSION, helpText, commandHelp} from './help.ts';
 import {figmaGet} from './http.ts';
 import {REGISTRY, route, type CommandContext, type CommandResult} from './registry.ts';
-import {parseRef, requireNode} from './ref.ts';
+import {parseFileRef, parseRef, requireNode} from './ref.ts';
 import {assertNoSecret, sanitize, type Env} from './security.ts';
 export interface Runtime {
   env: Env;
@@ -48,7 +48,7 @@ export async function main(argv: string[], runtime: Runtime = defaultRuntime): P
       // The discriminant keeps each registry handler's ref and flags paired, without erasing its contract.
       switch (routed.name) {
         case 'home': model = await REGISTRY.home.run({ref: null, flags: parseFlags(args, REGISTRY.home.def.flags)}, ctx); break;
-        case 'outline': model = await REGISTRY.outline.run({ref: parseRef(routed.positional!, undefined), flags: parseFlags(args, REGISTRY.outline.def.flags)}, ctx); break;
+        case 'outline': model = await REGISTRY.outline.run({ref: parseFileRef(routed.positional!), flags: parseFlags(args, REGISTRY.outline.def.flags)}, ctx); break;
         case 'inspect': {
           const flags = parseFlags(args, REGISTRY.inspect.def.flags);
           model = await REGISTRY.inspect.run({ref: requireNode(parseRef(routed.positional!, flags.node), 'inspect'), flags}, ctx); break;
@@ -57,7 +57,7 @@ export async function main(argv: string[], runtime: Runtime = defaultRuntime): P
           const flags = parseFlags(args, REGISTRY.render.def.flags);
           model = await REGISTRY.render.run({ref: requireNode(parseRef(routed.positional!, flags.node), 'render'), flags: {...flags, out: args.flags.has('out') ? flags.out : join(ctx.tmpdir, 'figma-axi')}}, ctx); break;
         }
-        case 'comments': model = await REGISTRY.comments.run({ref: parseRef(routed.positional!, undefined), flags: parseFlags(args, REGISTRY.comments.def.flags)}, ctx); break;
+        case 'comments': model = await REGISTRY.comments.run({ref: parseFileRef(routed.positional!), flags: parseFlags(args, REGISTRY.comments.def.flags)}, ctx); break;
         default: {const exhaustive: never = routed.name; return exhaustive;}
       }
     }

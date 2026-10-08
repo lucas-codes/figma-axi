@@ -9,9 +9,9 @@ export type NodeRef = { readonly kind: 'node'; readonly fileKey: FileKey; readon
 export type FigmaRef = FileRef | NodeRef;
 function isFileKey(value: string): value is FileKey { return /^[A-Za-z0-9]{1,128}$/.test(value); }
 function isNodeId(value: string): value is NodeId { return /^I?\d+:\d+(;I?\d+:\d+)*$/.test(value); }
-export function parseRef(input: string, nodeFlag: string | undefined): FigmaRef {
+function parseFileInput(input: string): {ref: FileRef; url: URL | null} {
   let key = input;
-  let node = nodeFlag;
+  let parsedUrl: URL | null = null;
   const fail = () => new AxiError({code: 'usage'}, 'Invalid Figma reference', ['Use a figma.com design, file, proto or board URL, or a file key']);
   if (!isFileKey(input)) {
     let url: URL;
@@ -22,13 +22,21 @@ export function parseRef(input: string, nodeFlag: string | undefined): FigmaRef 
     const parts = url.pathname.split('/');
     if (!['design', 'file', 'proto', 'board'].includes(parts[1] ?? '')) throw fail();
     key = parts[1] === 'design' && parts[3] === 'branch' ? parts[4] ?? '' : parts[2] ?? '';
-    node ??= url.searchParams.get('node-id') ?? undefined;
+    parsedUrl = url;
   }
   if (!isFileKey(key)) throw fail();
-  if (node === undefined) return {kind: 'file', fileKey: key};
+  return {ref: {kind: 'file', fileKey: key}, url: parsedUrl};
+}
+export function parseFileRef(input: string): FileRef {
+  return parseFileInput(input).ref;
+}
+export function parseRef(input: string, nodeFlag: string | undefined): FigmaRef {
+  const {ref, url} = parseFileInput(input);
+  const node = nodeFlag ?? url?.searchParams.get('node-id') ?? undefined;
+  if (node === undefined) return ref;
   const apiNode = node.replace(/-/g, ':');
   if (!isNodeId(apiNode)) throw new AxiError({code: 'usage'}, 'Invalid node id', ['Use a node id as 1-2 or 1:2']);
-  return {kind: 'node', fileKey: key, nodeId: apiNode};
+  return {kind: 'node', fileKey: ref.fileKey, nodeId: apiNode};
 }
 export function requireNode(ref: FigmaRef, command: CommandName): NodeRef {
   if (ref.kind === 'node') return ref;
