@@ -78,6 +78,7 @@ export async function figmaGet(op: Operation, rt: {env: Env; fetch: typeof globa
       assertNoSecret(raw, [token]);
       try { data = JSON.parse(raw); }
       catch { if (response.ok) throw new AxiError({code: 'bad_response'}, 'Invalid JSON response', ['Check the Figma API response']); }
+      assertNoSecret(JSON.stringify(data), [token]);
     }
     if (!response.ok) {
       const code = response.status === 400 ? 'bad_request' : response.status === 401 ? 'unauthorized' : response.status === 403 ? 'forbidden' : response.status === 404 ? 'not_found' : 'http_error';
