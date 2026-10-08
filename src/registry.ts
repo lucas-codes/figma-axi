@@ -1,7 +1,7 @@
 import type { Args } from './args.ts';
 import { AxiError } from './errors.ts';
 import type { FigmaGet } from './http.ts';
-import type { FigmaRef, NodeRef } from './ref.ts';
+import type { FileRef, NodeRef } from './ref.ts';
 import { run as home } from './commands/home.ts';
 import { run as outline } from './commands/outline.ts';
 import { run as inspect } from './commands/inspect.ts';
@@ -32,7 +32,7 @@ export interface CommandContext {
   bin: string;
 }
 export type Handler<D extends CommandDef<Record<string, FlagDef>>> = (
-  input: {ref: D['positional'] extends null ? null : D['positional'] extends {needsNode: true} ? NodeRef : FigmaRef; flags: Flags<D['flags']>},
+  input: {ref: D['positional'] extends null ? null : D['positional'] extends {needsNode: true} ? NodeRef : FileRef; flags: Flags<D['flags']>},
   ctx: CommandContext) => Promise<CommandResult>;
 const limit = {kind: 'integer', min: 1, max: Number.MAX_SAFE_INTEGER, default: 300, description: 'max rows before omitting'} as const;
 const full = {kind: 'boolean', description: 'no text truncation and no row limit'} as const;
