@@ -1,0 +1,31 @@
+{
+  "name": "@lucaslim/figma-axi",
+  "version": "0.1.0",
+  "description": "Read-only Figma REST for agents: frames, layer text, rendered images and comments.",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/lucas-codes/figma-axi.git" },
+  "bugs": { "url": "https://github.com/lucas-codes/figma-axi/issues" },
+  "homepage": "https://github.com/lucas-codes/figma-axi#readme",
+  "publishConfig": { "access": "public" },
+  "type": "module",
+  "bin": { "figma-axi": "bin/figma-axi" },
+  "files": ["bin", "dist", "README.md"],
+  "engines": { "node": ">=22" },
+  "volta": { "node": "24.21.0" },
+  "scripts": {
+    "build": "bun build src/index.ts --target=node --outdir=dist && chmod +x bin/figma-axi",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"src/__tests__/*.test.ts\"",
+    "prepublishOnly": "npm run typecheck && npm test",
+    "prepack": "npm run build",
+    "skill:gen": "node src/skill.ts --write",
+    "skill:check": "node src/skill.ts --check"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "24.13.5",
+    "@toon-format/toon": "4.1.1",
+    "@figma/rest-api-spec": "0.44.0",
+    "axi-axi": "0.1.0"
+  }
+}

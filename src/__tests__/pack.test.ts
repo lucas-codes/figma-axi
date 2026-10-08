@@ -1,0 +1,25 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {spawnSync} from 'node:child_process';
+import {readFileSync} from 'node:fs';
+const root = new URL('../../', import.meta.url).pathname;
+test('npm artifact contains only the standalone CLI and public docs', () => {
+  const result = spawnSync('npm', ['pack', '--dry-run', '--json'], {cwd: root, encoding: 'utf8'});
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const [pack] = JSON.parse(result.stdout.slice(result.stdout.indexOf('\n[') + 1)) as {name: string; files: {path: string}[]}[];
+  assert.equal(pack!.name, '@lucaslim/figma-axi');
+  assert.deepEqual(pack!.files.map(file => file.path).sort(), ['LICENSE', 'README.md', 'bin/figma-axi', 'dist/index.js', 'package.json']);
+  const dist = readFileSync(new URL('../../dist/index.js', import.meta.url), 'utf8');
+  const imports = [...dist.matchAll(/(?:\bfrom\s*|\bimport\s*\(|\brequire\s*\(|\bimport\s*)["']([^"']+)["']/g)].map(match => match[1]!);
+  assert.deepEqual(imports.filter(name => !name.startsWith('node:')), []);
+  assert.deepEqual([...new Set(dist.match(/https:\/\/[A-Za-z0-9.-]+/g))].sort(), ['https://api.figma.com', 'https://www.figma.com']);
+  const home = spawnSync(process.execPath, ['bin/figma-axi'], {cwd: root, encoding: 'utf8', env: {...process.env, FIGMA_TOKEN: ''}});
+  assert.equal(home.status, 0, home.stdout + home.stderr);
+  assert.equal(home.stderr, '');
+  assert.match(home.stdout, /auth: unavailable/);
+  const routed = spawnSync(process.execPath, ['bin/figma-axi', 'https://www.figma.com/design/AbC123xyz456/X?node-id=1-2', '--bogus'], {cwd: root, encoding: 'utf8', env: {...process.env, FIGMA_TOKEN: ''}});
+  assert.equal(routed.status, 2);
+  assert.equal(routed.stderr, '');
+  assert.match(routed.stdout, /figma-axi inspect --help/);
+  assert.match(routed.stdout, /code: usage/);
+});
