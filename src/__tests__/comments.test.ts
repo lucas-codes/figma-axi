@@ -59,12 +59,12 @@ test('default limit is 100 and --full removes it', async () => {
 const root = comments.comments[2];
 for (const [name, body] of Object.entries({
   envelope: {}, array: {comments: {}}, comment: {comments: [null]}, id: {comments: [{...root, id: 1}]},
-  parent: {comments: [{...root, parent_id: null}]}, user: {comments: [{...root, user: {handle: 1}}]},
+  parent: {comments: [{...root, parent_id: 1}]}, user: {comments: [{...root, user: {handle: 1}}]},
   date: {comments: [{...root, created_at: 'invalid'}]}, resolved: {comments: [{...root, resolved_at: 1}]},
   message: {comments: [{...root, message: null}]}, metadata: {comments: [{...root, client_meta: 1}]},
   node: {comments: [{...root, client_meta: {node_id: 'bad', node_offset: {x: 0, y: 0}}}]},
   offset: {comments: [{...root, client_meta: {node_id: '1:12', node_offset: {x: '0', y: 0}}}]},
-  orphan: {comments: [comments.comments[0]]}, duplicate: {comments: [root, root]},
+  duplicate: {comments: [root, root]},
   cycle: {comments: [{...root, parent_id: '101'}]},
   resolvedDate: {comments: [{...root, resolved_at: 'invalid'}]},
 })) test('bad_response for malformed ' + name, async () => {

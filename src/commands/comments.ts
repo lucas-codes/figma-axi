@@ -19,8 +19,7 @@ function text(raw: unknown): string {
 }
 function timestamp(raw: unknown): string {
   const value = text(raw);
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(value) || !Number.isFinite(Date.parse(value)) ||
-      new Date(value).toISOString().slice(0, 10) !== value.slice(0, 10)) return invalid();
+  if (!Number.isFinite(Date.parse(value))) return invalid();
   return value;
 }
 function vector(raw: unknown): raw is Vector {
@@ -45,7 +44,7 @@ function parseThreads(raw: unknown): {total: number; threads: Thread[]} {
   const rows: CommentRow[] = raw.comments.map((entry: unknown) => {
     if (!object(entry) || !object(entry.user)) return invalid();
     return {
-      id: text(entry.id), parent_id: entry.parent_id === undefined ? undefined : text(entry.parent_id),
+      id: text(entry.id), parent_id: entry.parent_id == null ? undefined : text(entry.parent_id),
       created_at: timestamp(entry.created_at),
       resolved_at: entry.resolved_at == null ? null : timestamp(entry.resolved_at),
       message: text(entry.message), author: text(entry.user.handle), nodeId: pin(entry.client_meta),
@@ -56,9 +55,11 @@ function parseThreads(raw: unknown): {total: number; threads: Thread[]} {
   for (const row of rows) {
     if (!row.id || ids.has(row.id)) return invalid();
     ids.add(row.id);
-    if (!row.parent_id) roots.set(row.id, {root: row, replies: []});
   }
-  for (const row of rows) if (row.parent_id) {
+  for (const row of rows) {
+    if (!row.parent_id || !ids.has(row.parent_id)) roots.set(row.id, {root: row, replies: []});
+  }
+  for (const row of rows) if (row.parent_id && !roots.has(row.id)) {
     const thread = roots.get(row.parent_id);
     if (!thread) return invalid();
     thread.replies.push(row);
@@ -83,7 +84,7 @@ export const run: Handler<CommentsDef> = async ({ref, flags}, ctx) => {
     const points = Array.from(row.message);
     if (!flags.full && points.length > 500) cut = true;
     return {id: row.id, parent: row.parent_id || null, node: row.nodeId === null ? null : urlForm(row.nodeId),
-      author: row.author, created: row.created_at.slice(0, 10), message: flags.full ? row.message : points.slice(0, 500).join('')};
+      author: row.author, created: new Date(row.created_at).toISOString().slice(0, 10), message: flags.full ? row.message : points.slice(0, 500).join('')};
   });
   const help: string[] = [];
   if (!total) help.push('No comments in file ' + ref.fileKey);
