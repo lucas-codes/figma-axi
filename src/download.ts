@@ -33,8 +33,16 @@ function matchesFormat(bytes: Uint8Array, format: ImageFormat): boolean {
   }
 }
 export async function fetchImage(url: ImageUrl, fetch: typeof globalThis.fetch, format: ImageFormat): Promise<Uint8Array> {
-  try {
-    const response = await fetch(url.href, {headers: {Accept: ACCEPT[format]}, redirect: 'manual'});
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      reject(downloadFailure('Image download deadline exceeded'));
+      controller.abort();
+    }, 60000);
+  });
+  const work = async () => {
+    const response = await fetch(url.href, {headers: {Accept: ACCEPT[format]}, redirect: 'manual', signal: controller.signal});
     if (response.status >= 300 && response.status < 400)
       throw new AxiError({code: 'security'}, 'Image redirect refused', ['Re-run render to request a direct image URL']);
     if (!response.ok) throw downloadFailure('Image download failed (' + response.status + ')');
@@ -62,10 +70,12 @@ export async function fetchImage(url: ImageUrl, fetch: typeof globalThis.fetch, 
     const bytes = Buffer.concat(chunks, size);
     if (!matchesFormat(bytes, format)) throw downloadFailure('Image bytes do not match the requested format');
     return bytes;
-  } catch (error) {
+  };
+  try { return await Promise.race([work(), deadline]); }
+  catch (error) {
     if (error instanceof AxiError) throw error;
     throw downloadFailure('Image download failed');
-  }
+  } finally { clearTimeout(timer); controller.abort(); }
 }
 export async function writeAtomic(path: string, bytes: Uint8Array): Promise<void> {
   const dir = dirname(path);
