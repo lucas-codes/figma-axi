@@ -87,6 +87,6 @@ export async function writeAtomic(path: string, bytes: Uint8Array): Promise<void
       await rename(temporary, path);
     } finally { await rm(temporary, {force: true}); }
   } catch {
-    throw downloadFailure('Could not write the rendered image');
+    throw new AxiError({code: 'download_failed'}, 'Could not write the rendered image', ['Check that --out points at a writable directory']);
   }
 }
