@@ -17,7 +17,7 @@ export const run: Handler<HomeDef> = async (_input, ctx) => {
   catch (error) {
     if (!(error instanceof AxiError) || error.detail.code !== 'token_missing') throw error;
     return {...base, auth: 'unavailable',
-      attention: ['FIGMA_TOKEN is not set. Create a personal access token in Figma (Settings then Security) with file_content and file_comments read scopes and export it'],
+      attention: ['FIGMA_TOKEN is not set. Create a personal access token in Figma (Settings then Security) with file_content, file_comments and current_user read scopes and export it'],
       help: ['Run `figma-axi --help` for setup and every command']};
   }
   return {...base, auth: 'ok (' + me.handle + ' <' + me.email + '>)', help: [
