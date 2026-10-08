@@ -30,6 +30,7 @@ function nodeId(value: FrameOffset['node_id']): value is NodeId {
   return /^I?\d+:\d+(;I?\d+:\d+)*$/.test(value);
 }
 function pin(raw: unknown): NodeId | null {
+  if (raw == null) return null;
   if (!object(raw)) return invalid();
   if ('node_id' in raw) {
     const id = text(raw.node_id);
