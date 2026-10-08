@@ -1,8 +1,7 @@
 # @lucaslim/figma-axi
 
 Read-only Figma REST for agents: frames, layer text, rendered images and comments.
-It prints compact, token-efficient TOON output without the Figma MCP server.
-Use the MCP server when you need styling or design-to-code context.
+It calls only the Figma REST API and prints compact, token-efficient TOON output.
 
 ## Install
 
@@ -226,9 +225,10 @@ sanitized for terminal controls, and secret echoes are refused.
 
 Errors go to stdout with stable `code` values and follow-up `help`.
 Success exits 0, usage errors exit 2, and all other errors exit 1.
-For agent workflows, fall back to the Figma MCP server on `token_missing`,
-`unauthorized`, `forbidden` or `transport_error`. A `rate_limited` error
-reports bounded retry guidance; the CLI does not retry for you.
+On `token_missing`, `unauthorized` or `forbidden`, follow `help` to fix
+`FIGMA_TOKEN` or file access; on `transport_error`, check connectivity and retry.
+A `rate_limited` error reports bounded retry guidance; the CLI does not retry
+for you.
 
 ## Development
 
