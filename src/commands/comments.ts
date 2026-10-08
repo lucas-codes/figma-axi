@@ -79,9 +79,10 @@ export const run: Handler<CommentsDef> = async ({ref, flags}, ctx) => {
   const dropped = visible.length - selected.length;
   let cut = false;
   const comments = selected.map(row => {
-    if (!flags.full && row.message.length > 500) cut = true;
+    const points = Array.from(row.message);
+    if (!flags.full && points.length > 500) cut = true;
     return {id: row.id, parent: row.parent_id || null, node: row.nodeId === null ? null : urlForm(row.nodeId),
-      author: row.author, created: row.created_at.slice(0, 10), message: flags.full ? row.message : row.message.slice(0, 500)};
+      author: row.author, created: row.created_at.slice(0, 10), message: flags.full ? row.message : points.slice(0, 500).join('')};
   });
   const help: string[] = [];
   if (!total) help.push('No comments in file ' + ref.fileKey);
