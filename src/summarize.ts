@@ -52,7 +52,7 @@ export function parseNodeTree(raw: unknown): RawNode {
   const id = sanitize(raw.id);
   if (!nodeId(id)) badResponse();
   let box: RawNode['box'] = null;
-  if (raw.absoluteBoundingBox !== undefined) {
+  if (raw.absoluteBoundingBox !== undefined && raw.absoluteBoundingBox !== null) {
     const b = raw.absoluteBoundingBox;
     if (!record(b) || typeof b.width !== 'number' || !Number.isFinite(b.width) ||
         typeof b.height !== 'number' || !Number.isFinite(b.height)) badResponse();
