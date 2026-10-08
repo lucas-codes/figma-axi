@@ -13,7 +13,7 @@ export const goldenCases = {
     'Run `figma-axi --help` for every command and flag',
   ]}},
   'home-unavailable': {argv: [], env: {}, exit: 0, model: {...base, auth: 'unavailable', attention: [
-    'FIGMA_TOKEN is not set. Create a personal access token in Figma (Settings then Security) with file_content and file_comments read scopes and export it',
+    'FIGMA_TOKEN is not set. Create a personal access token in Figma (Settings then Security) with file_content, file_comments and current_user read scopes and export it',
   ], help: ['Run `figma-axi --help` for setup and every command']}},
   'error-usage': {argv: ['inspect', 'https://www.figma.com/design/AbC123xyz456/Checkout'], exit: 2, model: {
     error: 'inspect needs a node and the URL has no node-id', code: 'usage', help: [
