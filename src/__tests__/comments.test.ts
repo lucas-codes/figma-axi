@@ -61,7 +61,7 @@ for (const [name, body] of Object.entries({
   envelope: {}, array: {comments: {}}, comment: {comments: [null]}, id: {comments: [{...root, id: 1}]},
   parent: {comments: [{...root, parent_id: null}]}, user: {comments: [{...root, user: {handle: 1}}]},
   date: {comments: [{...root, created_at: 'invalid'}]}, resolved: {comments: [{...root, resolved_at: 1}]},
-  message: {comments: [{...root, message: null}]}, metadata: {comments: [{...root, client_meta: null}]},
+  message: {comments: [{...root, message: null}]}, metadata: {comments: [{...root, client_meta: 1}]},
   node: {comments: [{...root, client_meta: {node_id: 'bad', node_offset: {x: 0, y: 0}}}]},
   offset: {comments: [{...root, client_meta: {node_id: '1:12', node_offset: {x: '0', y: 0}}}]},
   orphan: {comments: [comments.comments[0]]}, duplicate: {comments: [root, root]},
