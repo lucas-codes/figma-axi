@@ -1,0 +1,3 @@
+error: inspect needs a node and the URL has no node-id
+code: usage
+help[2]: Run `figma-axi outline AbC123xyz456` to list frames and their ids,Run `figma-axi inspect AbC123xyz456 --node <id>`

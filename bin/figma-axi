@@ -1,0 +1,12 @@
+#!/usr/bin/env node
+import('../dist/index.js').then(async ({main}) => {
+  process.exitCode = await main(process.argv.slice(2));
+}).catch(() => {
+  // Loader exceptions can contain secrets; use only a fixed diagnostic.
+  const token = process.env.FIGMA_TOKEN;
+  const output = process.argv.includes('--json')
+    ? '{\n  "error": "Unable to load local build",\n  "code": "transport_error"\n}\n'
+    : 'error: Unable to load local build\ncode: transport_error\n';
+  process.stdout.write(token && output.includes(token) ? '\n' : output);
+  process.exitCode = 1;
+});
