@@ -23,7 +23,7 @@ test('resolved root includes its replies, and counts before limiting', async () 
   ], help: [model.help[1]]});
   assert.deepEqual(await json(comments, ['--limit', '1']), {...model, comments: [model.comments[0]], help: [
     ...model.help,
-    'Run `figma-axi comments AbC123xyz456 --full` for uncut messages and all rows (2 rows omitted by --limit)',
+    'Run `figma-axi comments AbC123xyz456 --full` for all rows (2 rows omitted by --limit)',
   ]});
 });
 test('roots newest first and replies oldest first, independent of API order', async () => {
@@ -43,7 +43,7 @@ test('500 characters is uncut, 501 is cut; --full bypasses text and row limits',
   const body = {comments: [{...comments.comments[2], message: 'a'.repeat(501)}, {...comments.comments[4], message: 'b'.repeat(500)}]};
   assert.deepEqual(await json(body), {...model, total: 2, resolvedHidden: 0, comments: [
     {...model.comments[0], message: 'b'.repeat(500)}, {...model.comments[1], message: 'a'.repeat(500)},
-  ], help: [model.help[1], 'Run `figma-axi comments AbC123xyz456 --full` for uncut messages and all rows (0 rows omitted by --limit)']});
+  ], help: [model.help[1], 'Run `figma-axi comments AbC123xyz456 --full` for uncut messages']});
   assert.deepEqual(await json(body, ['--full', '--limit', '1']), {...model, total: 2, resolvedHidden: 0, comments: [
     {...model.comments[0], message: 'b'.repeat(500)}, {...model.comments[1], message: 'a'.repeat(501)},
   ], help: [model.help[1]]});
@@ -53,7 +53,7 @@ test('default limit is 100 and --full removes it', async () => {
   const limited = await json(body);
   assert.equal(limited.total, 101);
   assert.deepEqual(limited.comments.map((row: {id: string}) => row.id), Array.from({length: 100}, (_, i) => String(i)));
-  assert.equal(limited.help[1], 'Run `figma-axi comments AbC123xyz456 --full` for uncut messages and all rows (1 rows omitted by --limit)');
+  assert.equal(limited.help[1], 'Run `figma-axi comments AbC123xyz456 --full` for all rows (1 rows omitted by --limit)');
   assert.deepEqual((await json(body, ['--full'])).comments.map((row: {id: string}) => row.id), Array.from({length: 101}, (_, i) => String(i)));
 });
 const root = comments.comments[2];
