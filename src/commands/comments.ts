@@ -91,6 +91,10 @@ export const run: Handler<CommentsDef> = async ({ref, flags}, ctx) => {
   if (resolvedHidden) help.push('Run `figma-axi comments ' + ref.fileKey + ' --resolved` to include resolved threads');
   const pinned = visible.find(row => row.nodeId !== null);
   if (pinned && pinned.nodeId !== null) help.push('Run `figma-axi inspect ' + ref.fileKey + ' --node ' + urlForm(pinned.nodeId) + '` for the layers a comment is pinned to');
-  if (cut || dropped) help.push('Run `figma-axi comments ' + ref.fileKey + ' --full` for uncut messages and all rows (' + dropped + ' rows omitted by --limit)');
+  if (cut || dropped) {
+    const reason = cut ? 'uncut messages' + (dropped ? ' and all rows' : '') : 'all rows';
+    help.push('Run `figma-axi comments ' + ref.fileKey + ' --full` for ' + reason +
+      (dropped ? ' (' + dropped + ' rows omitted by --limit)' : ''));
+  }
   return {file: ref.fileKey, total, resolvedHidden, comments, help};
 };

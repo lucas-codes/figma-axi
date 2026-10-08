@@ -29,7 +29,7 @@ for (const json of [false, true]) test('home refuses secret echo on stdout, incl
     assert.equal((json ? JSON.parse(result.output) : decode(result.output)).code, 'security');
   }
 });
-test('all command stdout remains safe with a token set', async () => {
+test('unknown-flag diagnostics for outline, inspect, render and comments do not echo a token', async () => {
   for (const command of ['outline', 'inspect', 'render', 'comments']) {
     const argv = [command, 'AbC123xyz456', ...(['inspect', 'render'].includes(command) ? ['--node', '1-2'] : [])];
     const result = await run([...argv, '--bogus']);
