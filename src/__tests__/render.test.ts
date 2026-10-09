@@ -61,6 +61,32 @@ for (const body of [{err: null, images: {'1:2': null}}, {err: null, images: {}}]
     assert.equal(result.exit, 1);
     assert.equal(JSON.parse(result.output).code, 'render_failed');
   });
+test('batch validates every URL before downloading or writing any image', async t => {
+  const dir = await temporary(t);
+  const api = 'https://api.figma.com/v1/images/AbC123xyz456?ids=1%3A2%2C1%3A3&format=png&scale=1';
+  const first = 'https://images.example.test/first.png';
+  const second = 'https://images.example.test/second.png';
+  const args = ['render', 'AbC123xyz456', '--node', '1-2,1-3', '--out', dir, '--json'];
+  const refused = await run(args, {
+    [api]: {body: {err: null, images: {'1:2': first, '1:3': 'http://images.example.test/second.png'}}},
+    [first]: {bytes: png, contentType: 'image/png'},
+  });
+  assert.equal(refused.exit, 1);
+  assert.equal(JSON.parse(refused.output).code, 'security');
+  assert.deepEqual(await readdir(dir), []);
+  assert.deepEqual(refused.calls.map(c => c.url), [api]);
+  const safe = await run(args, {
+    [api]: {body: {err: null, images: {'1:2': first, '1:3': second}}},
+    [first]: {bytes: png, contentType: 'image/png'}, [second]: {bytes: png, contentType: 'image/png'},
+  });
+  assert.equal(safe.exit, 0);
+  assert.deepEqual(JSON.parse(safe.output).images, [
+    {node: '1-2', path: join(dir, 'AbC123xyz456/1-2@1x.png'), format: 'png', bytes: 68},
+    {node: '1-3', path: join(dir, 'AbC123xyz456/1-3@1x.png'), format: 'png', bytes: 68},
+  ]);
+  assert.deepEqual(await readFile(join(dir, 'AbC123xyz456/1-2@1x.png')), png);
+  assert.deepEqual(await readFile(join(dir, 'AbC123xyz456/1-3@1x.png')), png);
+});
 test('render failure includes sanitized bounded Figma error', async () => {
   const result = await run([...argv, '--json'], {[imageApi]: {body: {images: {'1:2': null}, err: '\u001b[31m' + 'x'.repeat(250) + '\u001b[0m'}}});
   assert.equal(result.exit, 1);
