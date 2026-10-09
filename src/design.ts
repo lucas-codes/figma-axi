@@ -383,10 +383,8 @@ export function buildSpec(walk: Walk<StyleFacet>, catalog: Catalog, naming: Nami
   };
   const layers: LayerRow[] = [];
   const instances: InstanceRow[] = [];
-  const imageRefs = new Set<ImageRef>();
   for (const {node, depth} of walk.visits) {
     const f = node.facet;
-    for (const paint of imagePaints(f)) imageRefs.add(paint.ref);
     const used = new Set<Binding>();
     const variableTokens = (target: string): string => {
       const parts: string[] = [];
@@ -463,5 +461,5 @@ export function buildSpec(walk: Walk<StyleFacet>, catalog: Catalog, naming: Nami
       instances.push({id: urlForm(node.id), component, variant: join(true), props: join(false)});
     }
   }
-  return {layers, tokens: [...tokens.values()].map(t => t.row), instances, imageFills: imageRefs.size};
+  return {layers, tokens: [...tokens.values()].map(t => t.row), instances, imageFills: collectImageFills(walk.root).length};
 }
