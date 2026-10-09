@@ -347,6 +347,10 @@ export function parseVariableNames(raw: unknown): Extract<Naming, {status: 'reso
   }
   return {status: 'resolved', lookup: ref => byId.get(ref.id) ?? (ref.key === null ? null : byKey.get(ref.key)) ?? null};
 }
+function componentName(id: string, catalog: Catalog): string {
+  const component = catalog.components.get(id);
+  return component?.setId === null || component?.setId === undefined ? component?.name ?? id : catalog.sets.get(component.setId) ?? component.name;
+}
 export function buildSpec(walk: Walk<StyleFacet>, catalog: Catalog, naming: Naming): DesignSpec {
   const refs = boundVariables(walk);
   const names = new Map<VariableId, VariableName>();
@@ -455,9 +459,9 @@ export function buildSpec(walk: Walk<StyleFacet>, catalog: Catalog, naming: Nami
     text = finish('text', text);
     layers.push({depth, id: urlForm(node.id), type: node.type, name: node.name, size, layout, fill, stroke, radius, effect, text});
     if (f.instance !== null) {
-      const i = f.instance, c = catalog.components.get(i.componentId);
-      const component = c?.setId === null || c?.setId === undefined ? c?.name ?? (i.componentId || node.name) : catalog.sets.get(c.setId) ?? c.name;
-      const props = i.props.map(p => ({...p, value: p.type === 'INSTANCE_SWAP' && typeof p.value === 'string' ? catalog.components.get(p.value)?.name ?? p.value : p.value}));
+      const i = f.instance;
+      const component = componentName(i.componentId, catalog) || node.name;
+      const props = i.props.map(p => ({...p, value: p.type === 'INSTANCE_SWAP' && typeof p.value === 'string' ? componentName(p.value, catalog) : p.value}));
       const join = (variant: boolean) => props.filter(p => (p.type === 'VARIANT') === variant).map(p => p.name + '=' + p.value).join(';') || null;
       instances.push({id: urlForm(node.id), component, variant: join(true), props: join(false)});
     }

@@ -116,6 +116,18 @@ test('nested effect bindings retain resolved sub-values, aggregates remain null;
   assert.equal(row?.fill, 'FUTURE_PAINT');
   assert.equal(row?.effect, 'FUTURE_EFFECT');
 });
+test('swap values use the same set, component name, and id fallbacks as instance components', () => {
+  const root = parseNodeTree({id: '1:2', type: 'INSTANCE', name: 'Button', componentId: '20:1', componentProperties: {
+    Icon: {type: 'INSTANCE_SWAP', value: '20:1'}, Standalone: {type: 'INSTANCE_SWAP', value: '20:2'},
+    MissingSet: {type: 'INSTANCE_SWAP', value: '20:3'}, Unknown: {type: 'INSTANCE_SWAP', value: '20:4'},
+  }}, parseStyleFacet);
+  const catalog = parseCatalog({components: {
+    '20:1': {name: 'Size=Sm, Style=Outline', componentSetId: '21:1'},
+    '20:2': {name: 'arrow-right'}, '20:3': {name: 'fallback-icon', componentSetId: '21:3'},
+  }, componentSets: {'21:1': {name: 'Icon'}}});
+  assert.deepEqual(buildSpec(walkLayers(root, {maxDepth: 5, limit: 300}), catalog, {status: 'none-bound'}).instances,
+    [{id: '1-2', component: 'Icon', variant: null, props: 'Icon=Icon;Standalone=arrow-right;MissingSet=fallback-icon;Unknown=20:4'}]);
+});
 test('property name suffix collisions and unmapped instance swaps keep identities; variants are not inferred from names', () => {
   const root = parseNodeTree({id: '1:2', type: 'INSTANCE', name: 'Size=Md', componentId: '20:1', componentProperties: {'Label#1:1': {type: 'TEXT', value: 'A'}, 'Label#2:2': {type: 'TEXT', value: 'B'}, Icon: {type: 'INSTANCE_SWAP', value: '20:9'}}}, parseStyleFacet);
   assert.deepEqual(buildSpec(walkLayers(root, {maxDepth: 5, limit: 300}), parseCatalog({components: {'20:1': {name: 'Size=Md'}}}), {status: 'none-bound'}).instances, [{id: '1-2', component: 'Size=Md', variant: null, props: 'Label#1:1=A;Label#2:2=B;Icon=20:9'}]);

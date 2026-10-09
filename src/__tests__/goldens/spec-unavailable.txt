@@ -16,7 +16,7 @@ tokens[3]{label,source,id,value,fields,uses,code}:
   var.becc5963,variable,"VariableID:becc5963959f6b0d8b557259e9c05419018ec695/11:1","#FFFFFF",fill,1,null
   var.20293d10,variable,"VariableID:20293d104b170164dd0c1bcd960e51cb856d7c36/11:2","12",radius,1,null
 instances[1]{id,component,variant,props}:
-  1-3,Dialog/Header,Align=Left,Dismiss=false;Icon=Align=Left
+  1-3,Dialog/Header,Align=Left,Dismiss=false;Icon=Dialog/Header
 imageFills: 1
 attention[1]: "Variable names are unavailable (Figma 403: Invalid scope(s): file_variables:read). They need a token with the file_variables:read scope on an Enterprise org; until then labels are var.<key prefix> and the value column is what the design resolves to"
 help[3]: Run `figma-axi assets AbC123xyz456 --node 1-2` to save 1 image fill,Run `figma-axi spec AbC123xyz456 --node 1-3` for the layers inside an instance,Run `figma-axi render AbC123xyz456 --node 1-2` to see this frame
