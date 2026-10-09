@@ -1,13 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import * as download from '../download.ts';
-import * as design from '../design.ts';
-const {parseImageUrl} = download;
-const parseImageRef = (value: string) => design.parseImageRef(value);
-const fetchImageFill: typeof download.fetchImageFill = (...args) => download.fetchImageFill(...args);
+import {parseImageUrl, fetchImageFill} from '../download.ts';
+import {parseImageRef} from '../design.ts';
 import {operationUrl} from '../http.ts';
-import {parseFileRef} from '../ref.ts';
+import {parseFileRef, parseRef, requireNode} from '../ref.ts';
 import {AxiError} from '../errors.ts';
 import {png, jpg} from './fixtures/images.ts';
 const url = parseImageUrl('https://fills.example.test/photo.svg');
@@ -38,6 +35,8 @@ test('fill redirects and oversized bodies refused', async () => {
 test('file fills endpoint and unbounded nodes URL', () => {
   const {fileKey} = parseFileRef('AbC123xyz456');
   assert.equal(operationUrl({op: 'getImageFills', fileKey}).href, 'https://api.figma.com/v1/files/AbC123xyz456/images');
+  const {nodeId} = requireNode(parseRef('https://www.figma.com/design/AbC123xyz456/Photos?node-id=1-2', undefined), 'assets');
+  assert.equal(operationUrl({op: 'getFileNodes', fileKey, query: {ids: nodeId}}).href, 'https://api.figma.com/v1/files/AbC123xyz456/nodes?ids=1%3A2');
 });
 for (const ref of ['A'.repeat(40), 'a'.repeat(39), '../photo'])
   test('image ref boundary rejects ' + ref, () => assert.throws(() => parseImageRef(ref), refuses('bad_response')));

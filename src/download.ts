@@ -23,7 +23,7 @@ export function parseImageUrl(raw: unknown): ImageUrl {
 const CAP = 50 * 1024 * 1024;
 const ACCEPT: Record<ImageFormat, string> = {png: 'image/png', jpg: 'image/jpeg', svg: 'image/svg+xml'};
 function downloadFailure(message: string): AxiError {
-  return new AxiError({code: 'download_failed'}, message, ['Re-run render to request a fresh image']);
+  return new AxiError({code: 'download_failed'}, message, ['Re-run the command to request a fresh image']);
 }
 function matchesFormat(bytes: Uint8Array, format: ImageFormat): boolean {
   switch (format) {
@@ -45,7 +45,7 @@ async function fetchBytes(url: ImageUrl, fetch: typeof globalThis.fetch, accept:
   const work = async () => {
     const response = await fetch(url.href, {headers: {Accept: accept}, redirect: 'manual', signal: controller.signal});
     if (response.status >= 300 && response.status < 400)
-      throw new AxiError({code: 'security'}, 'Image redirect refused', ['Re-run render to request a direct image URL']);
+      throw new AxiError({code: 'security'}, 'Image redirect refused', ['Re-run the command to request a direct image URL']);
     if (!response.ok) throw downloadFailure('Image download failed (' + response.status + ')');
     if (Number(response.headers.get('content-length')) > CAP) {
       await response.body?.cancel();
@@ -96,13 +96,12 @@ export function matchesImageRef(bytes: Uint8Array, ref: ImageRef): boolean {
 }
 export async function fetchImageFill(url: ImageUrl, fetch: typeof globalThis.fetch, ref: ImageRef): Promise<{bytes: Uint8Array; format: FillFormat}> {
   const bytes = await fetchBytes(url, fetch, 'image/*');
-  const format = fillFormat(bytes);
   if (!matchesImageRef(bytes, ref)) throw downloadFailure('Image fill SHA-1 does not match imageRef');
-  return {bytes, format};
+  return {bytes, format: fillFormat(bytes)};
 }
 export async function writeAtomic(path: string, bytes: Uint8Array): Promise<void> {
   const dir = dirname(path);
-  const temporary = join(dir, '.render-' + randomUUID() + '.tmp');
+  const temporary = join(dir, '.figma-axi-' + randomUUID() + '.tmp');
   try {
     await mkdir(dir, {recursive: true});
     try {
@@ -110,6 +109,6 @@ export async function writeAtomic(path: string, bytes: Uint8Array): Promise<void
       await rename(temporary, path);
     } finally { await rm(temporary, {force: true}); }
   } catch {
-    throw new AxiError({code: 'download_failed'}, 'Could not write the rendered image', ['Check that --out points at a writable directory']);
+    throw new AxiError({code: 'download_failed'}, 'Could not write the image', ['Check that --out points at a writable directory']);
   }
 }
