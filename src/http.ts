@@ -7,10 +7,11 @@ export type ImageFormat = Exclude<NonNullable<GetImagesQueryParams['format']>, '
 export type Operation =
   | {op: 'getMe'}
   | {op: 'getFile'; fileKey: FileKey; query: Required<Pick<GetFileQueryParams, 'depth'>>}
-  | {op: 'getFileNodes'; fileKey: FileKey; query: Required<Pick<GetFileNodesQueryParams, 'depth'>> & {ids: NodeId}}
+  | {op: 'getFileNodes'; fileKey: FileKey; query: Pick<GetFileNodesQueryParams, 'depth'> & {ids: NodeId}}
   | {op: 'getImages'; fileKey: FileKey; query: Required<Pick<GetImagesQueryParams, 'scale'>> & {ids: readonly [NodeId, ...NodeId[]]; format: ImageFormat}}
   | {op: 'getComments'; fileKey: FileKey; query: Required<GetCommentsQueryParams>}
-  | {op: 'getLocalVariables'; fileKey: FileKey};
+  | {op: 'getLocalVariables'; fileKey: FileKey}
+  | {op: 'getImageFills'; fileKey: FileKey};
 const SCOPE = {
   getMe: 'current_user:read',
   getFile: 'file_content:read',
@@ -18,6 +19,7 @@ const SCOPE = {
   getImages: 'file_content:read',
   getComments: 'file_comments:read',
   getLocalVariables: 'file_variables:read',
+  getImageFills: 'file_content:read',
 } as const satisfies Record<Operation['op'], string>;
 export type FigmaGet = (op: Operation) => Promise<unknown>;
 export function operationUrl(op: Operation): URL {
@@ -29,6 +31,7 @@ export function operationUrl(op: Operation): URL {
     case 'getImages': path = '/v1/images/' + op.fileKey; break;
     case 'getComments': path = '/v1/files/' + op.fileKey + '/comments'; break;
     case 'getLocalVariables': path = '/v1/files/' + op.fileKey + '/variables/local'; break;
+    case 'getImageFills': path = '/v1/files/' + op.fileKey + '/images'; break;
     default: { const exhaustive: never = op; return exhaustive; }
   }
   const url = new URL(path, FIGMA_ORIGIN);
