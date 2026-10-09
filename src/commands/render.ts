@@ -3,7 +3,7 @@ import {join} from 'node:path';
 import {fetchImage, parseImageUrl, writeAtomic} from '../download.ts';
 import {AxiError} from '../errors.ts';
 import {urlForm, type NodeId} from '../ref.ts';
-import type {Handler, RenderDef} from '../registry.ts';
+import {SVG_GUIDANCE, type Handler, type RenderDef} from '../registry.ts';
 import {sanitize} from '../security.ts';
 type Images = Pick<GetImagesResponse, 'images'> & {err: GetImagesResponse['err'] | string};
 function parseImages(raw: unknown, ids: readonly NodeId[]): Images {
@@ -34,5 +34,5 @@ export const run: Handler<RenderDef> = async ({ref, flags}, ctx) => {
     images.push({node: urlForm(id), path, format: flags.format, bytes: bytes.byteLength});
   }
   return {images,
-    help: ['Read the image at path; re-run with --scale 2 for finer detail']};
+    help: ['Read the image at path; re-run with --scale 2 for finer detail', SVG_GUIDANCE]};
 };

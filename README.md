@@ -79,7 +79,8 @@ figma-axi inspect --help             # arguments, flags and examples
 figma-axi outline AbC123xyz456
 figma-axi inspect AbC123xyz456 --node 1-2
 figma-axi spec AbC123xyz456 --node 1-2
-figma-axi render AbC123xyz456 --node 1-2
+figma-axi assets AbC123xyz456 --node 1-2
+figma-axi render AbC123xyz456 --node 1-2,1-3
 figma-axi comments AbC123xyz456
 figma-axi "https://www.figma.com/design/AbC123xyz456/Checkout"
 figma-axi "https://www.figma.com/design/AbC123xyz456/Checkout?node-id=1-2"
@@ -99,7 +100,8 @@ Node ids accept URL form (`1-2`) or API form (`1:2`); output uses URL form.
 | `outline <ref>` | Pages and top-level frames or sections | `--limit 300` |
 | `inspect <ref>` | One node's layers and text; requires a node | `--node <id>`, `--depth 5` (1–20), `--limit 300`, `--full` |
 | `spec <ref>` | One node's layout, styling, tokens and component props; requires a node | `--node <id>`, `--depth 5` (1–20), `--limit 300` |
-| `render <ref>` | Download one node's image; requires a node | `--node <id>`, `--format png` (png/jpg/svg), `--scale 1` (0.01–4), `--out <dir>` |
+| `assets <ref>` | Save original image fills under one node | `--node <id>`, `--limit 300`, `--out <dir>` |
+| `render <ref>` | Download one or several nodes' images; requires a node | `--node <id,...>`, `--format png` (png/jpg/svg), `--scale 1` (0.01–4), `--out <dir>` |
 | `comments <ref>` | Designer threads, open by default | `--resolved`, `--limit 100`, `--full` |
 
 All commands support `--help` and `--json`; `-v` / `--version` prints the version.
@@ -209,19 +211,39 @@ contents. `hidden`, `shapesOmitted`, `instanceLayersSkipped`, `beyondLimit`, and
 `imageFills` disclose cuts and distinct image-fill references. Drill into a
 nested instance with `spec --node <id>`; increase `--limit` or `--depth` for a
 larger view. `spec` does not support `--full`. Original image fills are distinct
-from composed `render` output; the `assets` follow-up is delivered separately.
+from composed `render` output; use `assets` to save the originals.
+
+### Assets
+
+`figma-axi assets AbC123xyz456 --node 1-2` saves visible original image fills
+across the whole subtree, including nested instance internals. It fetches nodes
+without a depth bound and one file-level fills map, then downloads sequentially.
+One row per distinct reference reports `imageRef,status,format,bytes,layer,uses,path`;
+`layer` is the first layer id and `uses` counts distinct layers. Top-level
+`found,saved,cached,missing,beyondLimit` disclose outcomes; raise `--limit`
+when refs are omitted.
+
+Files live at `<out>/<fileKey>/fills/<imageRef>.<ext>`, with the same temporary
+default as render. PNG/JPEG/GIF/WebP magic bytes determine the extension;
+`gifRef` takes precedence over `imageRef`. SHA-1 must match the reference
+before any write. Existing hash-verified files are `cached` without downloading.
+A reference absent from the map is `missing`, with null format, bytes and path.
+The first download failure aborts; re-running reuses completed files.
 
 ### Render
 
 `figma-axi render AbC123xyz456 --node 1-2` writes a PNG by default:
 
 ```
-path: /tmp/figma-axi-golden/figma-axi/AbC123xyz456/1-2@1x.png
-format: png
-scale: 1
-bytes: 68
-help[1]: Read the image at path; re-run with --scale 2 for finer detail
+images[1]{node,path,format,bytes}:
+  1-2,/tmp/figma-axi-golden/figma-axi/AbC123xyz456/1-2@1x.png,png,68
+help[2]: Read the image at path; re-run with --scale 2 for finer detail,SVG is for icons and vectors; use `spec` for layout and `assets` for photos
 ```
+
+`--node 1-2,1:3,1-4` renders several nodes in one API call. Normalized duplicates
+are removed in input order. If any node has no render URL, the command names
+all failed nodes before downloading anything. The `images` table is used even
+for one node. SVG is for icons and vectors; use `spec` for layout and `assets` for photos.
 
 This sample uses an injected test temp directory and a 68-byte fixture PNG.
 Real renders default to the system temp directory's `figma-axi` subdirectory,
@@ -258,7 +280,7 @@ Defaults are deliberately lossy and disclose omissions:
 | | Default | Override |
 |---|---|---|
 | Inspect / spec depth below the requested node | 5 | `--depth 1` through `--depth 20` |
-| Outline / inspect / spec rows | 300 | `--limit <n>`; inspect `--full` removes the limit |
+| Outline / inspect / spec rows; assets refs | 300 | `--limit <n>`; inspect `--full` removes the limit |
 | Structure text cells | 200 characters | Inspect `--full` removes truncation |
 | Comment rows | 100 | `--limit <n>` or `--full` |
 | Comment messages | 500 characters | `--full` removes truncation |

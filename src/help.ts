@@ -1,4 +1,4 @@
-import {DEFS, type CommandName, type FlagDef} from './registry.ts';
+import {DEFS, SVG_GUIDANCE, type CommandName, type FlagDef} from './registry.ts';
 export const VERSION = '0.1.0'; // x-release-please-version
 export const DESCRIPTION = 'Read-only Figma REST for agents: frames, layer text, rendered images and comments.';
 export function commandHelp(name: CommandName) {
@@ -10,6 +10,7 @@ export function commandHelp(name: CommandName) {
       flag: '--' + flag, default: 'default' in value ? value.default : null, description: value.description,
     })), {flag: '--json', default: null, description: 'print the normalized model as JSON'}],
     examples: def.examples,
+    ...(name === 'render' ? {help: [SVG_GUIDANCE]} : {}),
   };
 }
 export function helpText() {

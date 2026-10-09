@@ -17,7 +17,7 @@ export const goldenCases = {
     model: {
       images: [{node: '1-2', path: '/tmp/figma-axi-golden/figma-axi/AbC123xyz456/1-2@1x.png',
         format: 'png', bytes: 68}],
-      help: ['Read the image at path; re-run with --scale 2 for finer detail'],
+      help: ['Read the image at path; re-run with --scale 2 for finer detail', 'SVG is for icons and vectors; use `spec` for layout and `assets` for photos'],
     },
   },
 } satisfies Record<string, Scenario>;
