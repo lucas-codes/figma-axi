@@ -89,7 +89,11 @@ export async function figmaGet(op: Operation, rt: {env: Env; fetch: typeof globa
     }
     if (!response.ok) {
       const code = response.status === 400 ? 'bad_request' : response.status === 401 ? 'unauthorized' : response.status === 403 ? 'forbidden' : response.status === 404 ? 'not_found' : 'http_error';
-      const figma = data && typeof data === 'object' && 'err' in data && typeof data.err === 'string' ? sanitize(data.err).slice(0, 200) : null;
+      const message = data && typeof data === 'object'
+        ? 'err' in data && typeof data.err === 'string' ? data.err
+          : 'message' in data && typeof data.message === 'string' ? data.message : null
+        : null;
+      const figma = message === null ? null : Array.from(sanitize(message)).slice(0, 200).join('');
       let help: string;
       switch (response.status) {
         case 401: help = 'Check FIGMA_TOKEN is a valid, unexpired personal access token'; break;
