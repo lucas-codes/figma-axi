@@ -29,6 +29,7 @@ step home
 if ! printf '%s\n' "$output" | grep -q '^auth: ok'; then failed=1; fi
 step outline outline "$1"
 step inspect "$2"
+step spec spec "$2"
 step render render "$2" --json --out "$work"
 if [ "$code" -eq 0 ]; then
   # Read the returned path and inspect bytes without retaining the API response.
