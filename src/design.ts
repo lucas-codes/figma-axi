@@ -36,7 +36,7 @@ export type Typography = {family: string; weight: number; size: number; lineHeig
 export type InstanceProp = {name: string; type: ComponentPropertyType; value: string | boolean};
 type StyleSlot = 'fill' | 'stroke' | 'effect' | 'text' | 'grid';
 export type StyleFacet = {
-  size: {w: number; h: number} | null; sizing: {h: Sizing | null; v: Sizing | null} | null; absolute: boolean;
+  size: {w: number; h: number} | null; sizing: {h: Sizing; v: Sizing} | null; absolute: boolean;
   layout: AutoLayout | null; fills: readonly Paint[];
   strokes: {paints: readonly Paint[]; weight: number | Quad; align: 'inside' | 'outside' | 'center'} | null;
   radius: number | Quad | null; effects: readonly Shadow[]; opacity: number; text: Typography | null;
@@ -217,7 +217,7 @@ export const parseStyleFacet: FacetParser<StyleFacet> = (raw, type) => {
     for (const slot of ['fill', 'stroke', 'effect', 'text', 'grid'] as const) if (slots[slot] !== undefined) styles[slot] = styleId(slots[slot]);
   }
   const scalarValue = (key: string): string | null => {
-    const value = raw[key] ?? style?.[key];
+    const value = key === 'lineHeight' ? style?.lineHeightPx : raw[key] ?? style?.[key];
     if (value === undefined || value === null) return null;
     return typeof value === 'string' ? string(value) : String(number(value));
   };
@@ -245,7 +245,7 @@ export const parseStyleFacet: FacetParser<StyleFacet> = (raw, type) => {
       for (const alias of list) {
         const ref = variable(alias);
         // Aggregate arrays do not identify paint/effect indices; prefer precise nested bindings.
-        if (bindings.some(b => b.field === field && b.variable.id === ref.id)) continue;
+        if ((field === 'fill' || field === 'stroke' || field === 'effect') && bindings.some(b => b.field === field && b.variable.id === ref.id)) continue;
         let value: string | null;
         if (key === 'fills' || key === 'strokes' || key === 'textRangeFills') {
           const values = (key === 'strokes' ? strokePaints : fills).filter(p => p.kind === 'solid').map(p => p.color);
@@ -271,7 +271,7 @@ export const parseStyleFacet: FacetParser<StyleFacet> = (raw, type) => {
   const counts = new Map<string, number>();
   for (const p of props) counts.set(cleanName(p.name), (counts.get(cleanName(p.name)) ?? 0) + 1);
   if (type === 'INSTANCE') instance = {componentId: raw.componentId === undefined ? '' : string(raw.componentId), props: props.map(p => ({...p, name: counts.get(cleanName(p.name)) === 1 ? cleanName(p.name) : p.name}))};
-  return {size, sizing: h === null && v === null ? null : {h, v}, absolute: position === 'ABSOLUTE', layout, fills, strokes, radius, effects, opacity, text, styles, bindings, instance};
+  return {size, sizing: h === null || v === null ? null : {h, v}, absolute: position === 'ABSOLUTE', layout, fills, strokes, radius, effects, opacity, text, styles, bindings, instance};
 };
 function isBoundField(value: string): value is BoundField {return Object.hasOwn(FIELD_OF, value);}
 export function parseCatalog(entry: NodesEntry['entry']): Catalog {
@@ -343,7 +343,7 @@ export function buildSpec(walk: Walk<StyleFacet>, catalog: Catalog, naming: Nami
       let length = 8;
       while (length < 40 && refs.some(other => other.id !== ref.id && other.key !== null && other.key !== ref.key && other.key.slice(0, length) === ref.key?.slice(0, length))) length++;
       labels.set(ref.id, 'var.' + ref.key.slice(0, length));
-    } else labels.set(ref.id, 'var.' + ref.id.replaceAll(':', '-'));
+    } else labels.set(ref.id, 'var.' + ref.id.replace(/^VariableID:/, '').replaceAll(':', '-'));
   }
   type TokenUse = {row: TokenRow; fields: Set<string>; nodes: Set<string>; values: Set<string>};
   const tokens = new Map<string, TokenUse>();
@@ -389,7 +389,7 @@ export function buildSpec(walk: Walk<StyleFacet>, catalog: Catalog, naming: Nami
       return value === null ? extra.trim() || null : value + extra;
     };
     let size = f.size === null ? null : Math.round(f.size.w) + 'x' + Math.round(f.size.h);
-    if (size !== null && f.sizing !== null) size += ' ' + (f.sizing.h ?? '?') + '/' + (f.sizing.v ?? '?');
+    if (size !== null && f.sizing !== null) size += ' ' + f.sizing.h + '/' + f.sizing.v;
     if (size !== null && f.absolute) size += ' abs';
     size = finish('size', size);
     let layout: string | null = null;

@@ -1,0 +1,15 @@
+file: Product
+node: 1-2
+depth: 5
+variableNames: none-bound
+hidden: 0
+shapesOmitted: 0
+beyondLimit: 0
+instanceLayersSkipped: 0
+layers[1]{depth,id,type,name,size,layout,fill,stroke,radius,effect,text}:
+  0,1-2,FRAME,Unbound,null,null,solid #FFFFFF <Colors/Neutral/White>,null,null,null,null
+tokens[1]{label,source,id,value,fields,uses,code}:
+  Colors/Neutral/White,style,8accb1306182587aebf4f48a69692466e80ccf1b,"#FFFFFF",fill,1,null
+instances: []
+imageFills: 0
+help[1]: Run `figma-axi render AbC123xyz456 --node 1-2` to see this frame

@@ -10,6 +10,7 @@ const operations: [Operation, string][] = [
   [{op: 'getFileNodes', fileKey: ref.fileKey, query: {ids: ref.nodeId, depth: 5}}, 'https://api.figma.com/v1/files/AbC123xyz456/nodes?ids=1%3A2&depth=5'],
   [{op: 'getImages', fileKey: ref.fileKey, query: {ids: ref.nodeId, format: 'png', scale: 1}}, 'https://api.figma.com/v1/images/AbC123xyz456?ids=1%3A2&format=png&scale=1'],
   [{op: 'getComments', fileKey: ref.fileKey, query: {as_md: true}}, 'https://api.figma.com/v1/files/AbC123xyz456/comments?as_md=true'],
+  [{op: 'getLocalVariables', fileKey: ref.fileKey}, 'https://api.figma.com/v1/files/AbC123xyz456/variables/local'],
 ];
 for (const [op, expected] of operations) test('authenticated GET ' + op.op, async () => {
   assert.equal(operationUrl(op).href, expected);
@@ -26,6 +27,9 @@ for (const [status, code] of [[400, 'bad_request'], [401, 'unauthorized'], [403,
     await assert.rejects(figmaGet({op: 'getMe'}, {env, fetch: async () => Response.json({err: 'Invalid token'}, {status})}),
       {message: 'Figma refused the request (' + status + ')', detail: {code, status, figma: 'Invalid token'}});
   });
+test('variable endpoint refusals identify the variable read scope', async () => {
+  await assert.rejects(figmaGet({op: 'getLocalVariables', fileKey: ref.fileKey}, {env, fetch: async () => Response.json({message: 'Invalid scope(s)'}, {status: 403})}), {detail: {code: 'forbidden', status: 403, figma: 'Invalid scope(s)'}, help: ['Check FIGMA_TOKEN has the file_variables:read scope']});
+});
 test('429 exposes bounded rate-limit headers and rejects invalid retry values', async () => {
   for (const [retry, expected] of [['42', 42], ['86401', null], ['1.5', null], ['tomorrow', null]] as const)
     await assert.rejects(figmaGet({op: 'getMe'}, {env, fetch: async () => new Response('', {status: 429, headers: {

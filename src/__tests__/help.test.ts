@@ -8,6 +8,7 @@ for (const [command, expectedFlags] of [
   ['inspect', ['--node', '--depth', '--limit', '--full', '--json']],
   ['render', ['--node', '--format', '--scale', '--out', '--json']],
   ['comments', ['--resolved', '--limit', '--full', '--json']],
+  ['spec', ['--node', '--depth', '--limit', '--json']],
 ] as const) test(command + ' help works without credentials or requests', async () => {
   const result = await run([command, '--help'], {}, {});
   assert.equal(result.exit, 0);
@@ -24,7 +25,7 @@ test('root help describes commands, setup and version', async () => {
   assert.match(help.output, /examples\[/);
   assert.match(help.output, /FIGMA_TOKEN/);
   const model = decode(help.output) as {commands: {command: string}[]};
-  assert.deepEqual(model.commands.map(row => row.command), ['home', 'outline', 'inspect', 'render', 'comments']);
+  assert.deepEqual(model.commands.map(row => row.command), ['home', 'outline', 'inspect', 'render', 'comments', 'spec']);
   const version = await run(['-v'], {}, {});
   assert.equal(version.exit, 0);
   assert.equal(version.output, 'version: 0.1.0\n');
