@@ -263,9 +263,8 @@ env -u FIGMA_TOKEN pnpm exec figma-axi
 env -u FIGMA_TOKEN pnpm exec figma-axi inspect --help
 ```
 
-This check needs no Figma token. Live, read-only smoke tests require your own
-token and file: check home, outline, inspect, render and comments, then open the
-returned image and compare the frame names with Figma.
+This check needs no Figma token. For a live read-only smoke check after `npm run build`,
+run `scripts/smoke.sh <file-url> <node-url>` with `FIGMA_TOKEN` set.
 
 ## Releases
 
