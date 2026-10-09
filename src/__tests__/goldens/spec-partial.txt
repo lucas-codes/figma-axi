@@ -16,7 +16,7 @@ tokens[3]{label,source,id,value,fields,uses,code}:
   white,variable,"VariableID:5b33ff34fe49f7347b7d06be6778f40205860838/4096:10","#FFFFFF",fill,1,var(--white)
   var.cf9dcd3d,variable,"VariableID:cf9dcd3dd4ec51eb709e9b1ebfbc8e8fc8c78b90/4476:170","12",radius,1,null
 instances[1]{id,component,variant,props}:
-  1-3,Assets/DialogHeader,Positioning=Left,Dismiss=false;Icon=Positioning=Left
+  1-3,Assets/DialogHeader,Positioning=Left,Dismiss=false;Icon=Assets/DialogHeader
 imageFills: 1
 attention[1]: 1 referenced variable has no matching name; unmatched labels are var.<key prefix>
 help[3]: Run `figma-axi assets AbC123xyz456 --node 1-2` to save 1 image fill,Run `figma-axi spec AbC123xyz456 --node 1-3` for the layers inside an instance,Run `figma-axi render AbC123xyz456 --node 1-2` to see this frame
