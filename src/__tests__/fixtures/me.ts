@@ -1,4 +1,4 @@
-import type {GetMeResponse} from '@figma/rest-api-spec';
+import type {GetMeResponse, ErrorResponsePayloadWithErrorBoolean} from '@figma/rest-api-spec';
 import type {DeepPartial, Scenario} from '../harness.ts';
 export const me = {id: 'lucas', handle: 'lucas', email: 'lucas@example.com'} satisfies DeepPartial<GetMeResponse>;
 const base = {
@@ -8,6 +8,15 @@ const base = {
 };
 export const goldenCases = {
   home: {argv: [], routes: {'https://api.figma.com/v1/me': {body: me}}, exit: 0, model: {...base, auth: 'ok (lucas <lucas@example.com>)', help: [
+    'Run `figma-axi <figma-url>` to outline a file or inspect the frame its node-id points at',
+    'Run `figma-axi render <figma-url>` for a PNG of that frame',
+    'Run `figma-axi --help` for every command and flag',
+  ]}},
+  'home-no-user-scope': {argv: [], routes: {'https://api.figma.com/v1/me': {status: 403, body: {
+    error: true, status: 403, message: 'Invalid scope: ["file_content:read", "file_comments:read"]',
+  } satisfies ErrorResponsePayloadWithErrorBoolean}}, exit: 0, model: {...base, auth: 'ok', attention: [
+    'FIGMA_TOKEN works but lacks the current_user:read scope, so the account is not shown. File commands are unaffected; add the scope to show it',
+  ], help: [
     'Run `figma-axi <figma-url>` to outline a file or inspect the frame its node-id points at',
     'Run `figma-axi render <figma-url>` for a PNG of that frame',
     'Run `figma-axi --help` for every command and flag',

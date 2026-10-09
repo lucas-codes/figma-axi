@@ -1,0 +1,6 @@
+bin: /repo/node_modules/.bin/figma-axi
+description: "Read-only Figma REST for agents: frames, layer text, rendered images and comments."
+version: 0.1.0
+auth: ok
+attention[1]: "FIGMA_TOKEN works but lacks the current_user:read scope, so the account is not shown. File commands are unaffected; add the scope to show it"
+help[3]: Run `figma-axi <figma-url>` to outline a file or inspect the frame its node-id points at,Run `figma-axi render <figma-url>` for a PNG of that frame,Run `figma-axi --help` for every command and flag

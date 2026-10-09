@@ -53,7 +53,10 @@ export FIGMA_TOKEN="$(security find-generic-password -a "$USER" -s figma-axi -w)
 Run `figma-axi` with no arguments to check the result. It prints
 `auth: ok (<your account>)` when authentication works, or `auth: unavailable`
 with setup guidance when the token is missing. A missing-token home exits 0
-without making a request.
+without making a request. If the token lacks only `current_user:read`, home
+still exits 0 with `auth: ok` and an `attention` message explaining why the
+account is not shown. File commands are unaffected; add that scope to show
+the account. Other authentication refusals remain errors.
 
 This is the missing-token test fixture's exact output; the `bin` path depends
 on where the command is installed:
