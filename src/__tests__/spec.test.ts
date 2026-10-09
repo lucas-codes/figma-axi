@@ -69,6 +69,33 @@ test('spec needs a node, rejects unsupported flags, and accepts URL node ids wit
   assert.equal(url.exit, 0);
   assert.equal(JSON.parse(url.output).node, '1-2');
 });
+for (const child of [
+  {id: '1:3', type: 'ELLIPSE', name: 'Photo', fills: [{type: 'IMAGE', imageRef: 'a'.repeat(40)}]},
+  {id: '1:3', type: 'INSTANCE', name: 'Collapsed', children: [{id: '1:4', type: 'RECTANGLE', name: 'Photo', fills: [{type: 'IMAGE', imageRef: 'a'.repeat(40)}]}]},
+]) test('image count includes omitted shapes and collapsed instance internals: ' + child.type, async () => {
+  const body = {name: 'Photos', nodes: {'1:2': {components: {}, document: {id: '1:2', type: 'FRAME', name: 'Frame', children: [child]}}}};
+  const result = await run(argv, {[nodesUrl]: {body}});
+  assert.equal(result.exit, 0);
+  const model = JSON.parse(result.output);
+  assert.equal(model.imageFills, 1);
+  assert.equal(model.help[0], 'Run `figma-axi assets AbC123xyz456 --node 1-2` to save 1 image fill');
+  assert.deepEqual(result.calls.map(c => c.url), [nodesUrl]);
+});
+test('image count deduplicates refs across all visible subtree nodes, even beyond row limits', async () => {
+  const photo = {type: 'IMAGE', imageRef: 'a'.repeat(40)};
+  const body = {name: 'Photos', nodes: {'1:2': {components: {}, document: {id: '1:2', type: 'FRAME', name: 'Frame', children: [
+    {id: '1:3', type: 'RECTANGLE', name: 'A', fills: [photo]},
+    {id: '1:4', type: 'ELLIPSE', name: 'B', fills: [photo]},
+    {id: '1:5', type: 'RECTANGLE', name: 'Hidden', visible: false, fills: [{type: 'IMAGE', imageRef: 'b'.repeat(40)}]},
+  ]}}}};
+  const result = await run([...argv, '--limit', '1'], {[nodesUrl]: {body}});
+  assert.equal(result.exit, 0);
+  assert.equal(JSON.parse(result.output).imageFills, 1);
+  const cut = await run(argv, {[nodesUrl]: {body: {name: 'Photos', nodes: {'1:2': {components: {}, document: {id: '1:2', type: 'FRAME', name: 'Frame'}}}}}});
+  assert.equal(cut.exit, 0);
+  assert.equal(JSON.parse(cut.output).imageFills, 0);
+  assert.deepEqual(cut.calls.map(c => c.url), [nodesUrl]);
+});
 test('null requested node reports node_not_found', async () => {
   const result = await run(argv, {[nodesUrl]: {body: {name: 'Product', nodes: {'1:2': null}}}});
   assert.equal(result.exit, 1);

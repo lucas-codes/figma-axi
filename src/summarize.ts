@@ -98,7 +98,7 @@ export function parseNodesEntry(raw: unknown, ref: NodeRef): NodesEntry {
 }
 export type Visit<F> = {node: RawNode<F>; depth: number; collapsed: boolean};
 export type WalkCounts = {hidden: number; shapesOmitted: number; beyondLimit: number; instanceLayersSkipped: number};
-export type Walk<F> = {visits: readonly Visit<F>[]; counts: WalkCounts; depthCutPossible: boolean};
+export type Walk<F> = {root: RawNode<F>; visits: readonly Visit<F>[]; counts: WalkCounts; depthCutPossible: boolean};
 export function walkLayers<F>(root: RawNode<F>, opts: {maxDepth: number; limit: number | null}): Walk<F> {
   const visits: Visit<F>[] = [];
   const counts: WalkCounts = {hidden: 0, shapesOmitted: 0, beyondLimit: 0, instanceLayersSkipped: 0};
@@ -130,7 +130,7 @@ export function walkLayers<F>(root: RawNode<F>, opts: {maxDepth: number; limit: 
   if (root.type === 'DOCUMENT') {
     if (!omitted(root)) for (const child of root.children) visit(child, 0);
   } else visit(root, 0);
-  return {visits, counts, depthCutPossible};
+  return {root, visits, counts, depthCutPossible};
 }
 export function summarize(root: RawNode, opts: SummaryOptions): NodeSummary {
   const walk = walkLayers(root, opts);
