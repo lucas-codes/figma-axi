@@ -16,7 +16,7 @@ test('render literal TOON golden and written PNG', async () => {
   const result = await run(s.argv, s.routes, env, s.tmpdir);
   assert.equal(result.exit, 0);
   assert.equal(result.output, await readFile(new URL('./goldens/render.txt', import.meta.url), 'utf8') + '\n');
-  assert.deepEqual(await readFile(s.model.path), png);
+  assert.deepEqual(await readFile(s.model.images[0]!.path), png);
   assert.equal(result.output.includes(env.FIGMA_TOKEN), false);
 });
 test('deterministic path, API-form id, unauthenticated download and overwrite', async t => {
@@ -29,7 +29,7 @@ test('deterministic path, API-form id, unauthenticated download and overwrite', 
   const result = await run([...argv, '--json'], routes, env, dir);
   const path = join(dir, 'figma-axi/AbC123xyz456/1-2@1x.png');
   assert.equal(result.exit, 0);
-  assert.deepEqual(JSON.parse(result.output), {path, format: 'png', scale: 1, bytes: 68, help: ['Read the image at path; re-run with --scale 2 for finer detail']});
+  assert.deepEqual(JSON.parse(result.output), {images: [{node: '1-2', path, format: 'png', bytes: 68}], help: ['Read the image at path; re-run with --scale 2 for finer detail']});
   assert.deepEqual(await readFile(path), png);
   assert.equal(result.calls[0]?.url, imageApi);
   assert.deepEqual(Object.fromEntries(new Headers(result.calls[1]?.init?.headers)), {accept: 'image/png'});
@@ -38,8 +38,8 @@ test('deterministic path, API-form id, unauthenticated download and overwrite', 
   routes[url] = {bytes: updated, contentType: 'image/png'};
   const again = await run([...argv, '--json'], routes, env, dir);
   assert.equal(again.exit, 0);
-  assert.equal(JSON.parse(again.output).path, path);
-  assert.equal(JSON.parse(again.output).bytes, 75);
+  assert.equal(JSON.parse(again.output).images[0].path, path);
+  assert.equal(JSON.parse(again.output).images[0].bytes, 75);
   assert.deepEqual(await readFile(path), updated);
   assert.deepEqual(await readdir(join(dir, 'figma-axi/AbC123xyz456')), ['1-2@1x.png']);
 });
@@ -52,7 +52,7 @@ for (const [format, bytes, contentType] of [['jpg', jpg, 'image/jpeg'], ['svg', 
     });
     assert.equal(result.exit, 0);
     const path = join(dir, 'AbC123xyz456/1-2@2x.' + format);
-    assert.deepEqual(JSON.parse(result.output), {path, format, scale: 2, bytes: bytes.length, help: ['Read the image at path; re-run with --scale 2 for finer detail']});
+    assert.deepEqual(JSON.parse(result.output), {images: [{node: '1-2', path, format, bytes: bytes.length}], help: ['Read the image at path; re-run with --scale 2 for finer detail']});
     assert.deepEqual(await readFile(path), Buffer.from(bytes));
   });
 for (const body of [{err: null, images: {'1:2': null}}, {err: null, images: {}}])

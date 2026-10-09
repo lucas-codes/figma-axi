@@ -1,5 +1,3 @@
-path: /tmp/figma-axi-golden/figma-axi/AbC123xyz456/1-2@1x.png
-format: png
-scale: 1
-bytes: 68
+images[1]{node,path,format,bytes}:
+  1-2,/tmp/figma-axi-golden/figma-axi/AbC123xyz456/1-2@1x.png,png,68
 help[1]: Read the image at path; re-run with --scale 2 for finer detail
