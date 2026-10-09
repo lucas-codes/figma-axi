@@ -8,7 +8,7 @@ const operations: [Operation, string][] = [
   [{op: 'getMe'}, 'https://api.figma.com/v1/me'],
   [{op: 'getFile', fileKey: ref.fileKey, query: {depth: 2}}, 'https://api.figma.com/v1/files/AbC123xyz456?depth=2'],
   [{op: 'getFileNodes', fileKey: ref.fileKey, query: {ids: ref.nodeId, depth: 5}}, 'https://api.figma.com/v1/files/AbC123xyz456/nodes?ids=1%3A2&depth=5'],
-  [{op: 'getImages', fileKey: ref.fileKey, query: {ids: ref.nodeId, format: 'png', scale: 1}}, 'https://api.figma.com/v1/images/AbC123xyz456?ids=1%3A2&format=png&scale=1'],
+  [{op: 'getImages', fileKey: ref.fileKey, query: {ids: [ref.nodeId], format: 'png', scale: 1}}, 'https://api.figma.com/v1/images/AbC123xyz456?ids=1%3A2&format=png&scale=1'],
   [{op: 'getComments', fileKey: ref.fileKey, query: {as_md: true}}, 'https://api.figma.com/v1/files/AbC123xyz456/comments?as_md=true'],
   [{op: 'getLocalVariables', fileKey: ref.fileKey}, 'https://api.figma.com/v1/files/AbC123xyz456/variables/local'],
 ];

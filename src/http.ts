@@ -8,7 +8,7 @@ export type Operation =
   | {op: 'getMe'}
   | {op: 'getFile'; fileKey: FileKey; query: Required<Pick<GetFileQueryParams, 'depth'>>}
   | {op: 'getFileNodes'; fileKey: FileKey; query: Required<Pick<GetFileNodesQueryParams, 'depth'>> & {ids: NodeId}}
-  | {op: 'getImages'; fileKey: FileKey; query: Required<Pick<GetImagesQueryParams, 'scale'>> & {ids: NodeId; format: ImageFormat}}
+  | {op: 'getImages'; fileKey: FileKey; query: Required<Pick<GetImagesQueryParams, 'scale'>> & {ids: readonly [NodeId, ...NodeId[]]; format: ImageFormat}}
   | {op: 'getComments'; fileKey: FileKey; query: Required<GetCommentsQueryParams>}
   | {op: 'getLocalVariables'; fileKey: FileKey};
 const SCOPE = {
@@ -32,7 +32,7 @@ export function operationUrl(op: Operation): URL {
     default: { const exhaustive: never = op; return exhaustive; }
   }
   const url = new URL(path, FIGMA_ORIGIN);
-  if ('query' in op) for (const [key, value] of Object.entries(op.query)) url.searchParams.set(key, String(value));
+  if ('query' in op) for (const [key, value] of Object.entries(op.query)) url.searchParams.set(key, Array.isArray(value) ? value.join(',') : String(value));
   return url;
 }
 const CAP = 16 * 1024 * 1024;

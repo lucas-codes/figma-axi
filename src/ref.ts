@@ -6,6 +6,7 @@ export type FileKey = Brand<string, 'FileKey'>;
 export type NodeId = Brand<string, 'NodeId'>;
 export type FileRef = { readonly kind: 'file'; readonly fileKey: FileKey };
 export type NodeRef = { readonly kind: 'node'; readonly fileKey: FileKey; readonly nodeId: NodeId };
+export type RenderRef = NodeRef & {readonly nodeIds: readonly [NodeId, ...NodeId[]]};
 export type FigmaRef = FileRef | NodeRef;
 function isFileKey(value: string): value is FileKey { return /^[A-Za-z0-9]{1,128}$/.test(value); }
 function isNodeId(value: string): value is NodeId { return /^I?\d+:\d+(;I?\d+:\d+)*$/.test(value); }
@@ -44,5 +45,10 @@ export function requireNode(ref: FigmaRef, command: CommandName): NodeRef {
     'Run `figma-axi outline ' + ref.fileKey + '` to list frames and their ids',
     'Run `figma-axi ' + command + ' ' + ref.fileKey + ' --node <id>`',
   ]);
+}
+export function parseRenderRef(input: string, nodeFlag: string | undefined): RenderRef {
+  const first = requireNode(parseRef(input, nodeFlag?.split(',')[0]), 'render');
+  const rest = nodeFlag === undefined ? [] : nodeFlag.split(',').slice(1).map(id => requireNode(parseRef(input, id), 'render').nodeId);
+  return {...first, nodeIds: [first.nodeId, ...new Set(rest.filter(id => id !== first.nodeId))]};
 }
 export function urlForm(id: NodeId): string { return id.replace(/:/g, '-'); }

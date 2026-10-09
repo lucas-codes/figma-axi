@@ -12,7 +12,7 @@ for (const [op, body] of [
   [{op: 'getMe'}, {handle: token, email: 'lucas@example.com'}],
   [{op: 'getFile', fileKey: ref.fileKey, query: {depth: 2}}, {document: {name: token}}],
   [{op: 'getFileNodes', fileKey: ref.fileKey, query: {depth: 5, ids: ref.nodeId}}, {nodes: {'1:2': {document: {name: token}}}}],
-  [{op: 'getImages', fileKey: ref.fileKey, query: {ids: ref.nodeId, format: 'png', scale: 1}}, {images: {'1:2': 'https://images.test/img?token=' + token}}],
+  [{op: 'getImages', fileKey: ref.fileKey, query: {ids: [ref.nodeId], format: 'png', scale: 1}}, {images: {'1:2': 'https://images.test/img?token=' + token}}],
   [{op: 'getComments', fileKey: ref.fileKey, query: {as_md: true}}, {comments: [{message: token}]}],
 ] satisfies [Operation, unknown][]) test('authenticated boundary refuses echoed tokens for ' + op.op, async () => {
   await assert.rejects(figmaGet(op, {env, fetch: async () => Response.json(body)}), {detail: {code: 'security'}});
