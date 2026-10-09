@@ -21,7 +21,7 @@ runtime dependencies and no install scripts. It calls Figma REST directly at
 
 1. Sign in to Figma and open **Settings**, then **Security**, then **Personal access tokens**.
 2. Generate a token, name it and choose an expiry.
-3. Select `file_content:read`, `file_comments:read` and `current_user:read`.
+3. Select required `file_content:read` and `file_comments:read`; optional `current_user:read` adds the account to home.
 4. Copy the token and store it securely. Its account must be able to open the files you read.
 
 ### 2. Set the environment
@@ -66,7 +66,7 @@ bin: /repo/node_modules/.bin/figma-axi
 description: "Read-only Figma REST for agents: frames, layer text, rendered images and comments."
 version: 0.1.0
 auth: unavailable
-attention[1]: "FIGMA_TOKEN is not set. Create a personal access token in Figma (Settings then Security) with file_content, file_comments and current_user read scopes and export it"
+attention[1]: "FIGMA_TOKEN is not set. Create a personal access token in Figma (Settings then Security) with required file_content:read and file_comments:read scopes; current_user:read is optional to show the account. Export it"
 help[1]: Run `figma-axi --help` for setup and every command
 ```
 
