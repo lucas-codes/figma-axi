@@ -23,6 +23,6 @@ for (const phase of ['headers', 'body'] as const) test('image deadline aborts st
   // Release the mock even on the unfixed code, so the red run cannot hang.
   release?.();
   assert.deepEqual(await observed, {error: 'Image download deadline exceeded', code: 'download_failed',
-    help: ['Re-run render to request a fresh image']});
+    help: ['Re-run the command to request a fresh image']});
   assert.equal(signal?.aborted, true);
 });

@@ -65,6 +65,21 @@ for (const [reply, code] of [[{bytes: Buffer.concat([png, Buffer.from('wrong')])
     assert.equal(JSON.parse(result.output).code, code);
     assert.deepEqual(await readdir(dir), []);
   });
+test('tampered bytes report integrity failure before format sniffing, with neutral recovery advice', async t => {
+  const dir = await temp(t);
+  const result = await run([...argv, '--out', dir], {...routes(), [url]: {bytes: Buffer.from('tampered'), contentType: 'text/plain'}});
+  assert.equal(result.exit, 1);
+  assert.deepEqual(JSON.parse(result.output), {error: 'Image fill SHA-1 does not match imageRef', code: 'download_failed',
+    help: ['Re-run the command to request a fresh image']});
+  assert.deepEqual(await readdir(dir), []);
+});
+test('assets redirects give command-neutral diagnostics', async t => {
+  const dir = await temp(t);
+  const redirected = await run([...argv, '--out', dir], {...routes(), [url]: {bytes: png, contentType: 'image/png', status: 302}});
+  assert.equal(redirected.exit, 1);
+  assert.deepEqual(JSON.parse(redirected.output), {error: 'Image redirect refused', code: 'security',
+    help: ['Re-run the command to request a direct image URL']});
+});
 test('corrupt cache is repaired and unchanged files are reused', async t => {
   const dir = await temp(t), out = join(dir, 'AbC123xyz456/fills');
   await mkdir(out, {recursive: true});

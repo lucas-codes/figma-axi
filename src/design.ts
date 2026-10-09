@@ -76,8 +76,8 @@ function number(raw: unknown): number {if (typeof raw !== 'number' || !Number.is
 function numeric(raw: Record<string, unknown>, key: string, fallback = 0): number {return raw[key] === undefined ? fallback : number(raw[key]);}
 function boolean(raw: unknown, fallback: boolean): boolean {if (raw === undefined) return fallback; if (typeof raw !== 'boolean') bad(); return raw;}
 function array(raw: unknown): unknown[] {if (!Array.isArray(raw)) bad(); return raw;}
-function choice<const T extends readonly string[]>(raw: unknown, values: T, fallback: T[number]): T[number] {
-  if (raw === undefined) return fallback;
+function choice<const T extends readonly string[]>(raw: unknown, values: T, fallback?: T[number]): T[number] {
+  if (raw === undefined && fallback !== undefined) return fallback;
   for (const value of values) if (raw === value) return value;
   return bad();
 }
@@ -283,8 +283,7 @@ export const parseStyleFacet: FacetParser<StyleFacet> = (raw, type) => {
   const props: InstanceProp[] = [];
   if (raw.componentProperties !== undefined) for (const [name, item] of Object.entries(object(raw.componentProperties))) {
     const p = object(item);
-    const kind = choice(p.type, ['BOOLEAN', 'INSTANCE_SWAP', 'TEXT', 'VARIANT'], 'TEXT');
-    if (p.type === undefined) bad();
+    const kind = choice(p.type, ['BOOLEAN', 'INSTANCE_SWAP', 'TEXT', 'VARIANT']);
     const value = kind === 'BOOLEAN' ? boolean(p.value, false) : string(p.value);
     if (p.value === undefined) bad();
     props.push({name: sanitize(name), type: kind, value});
@@ -300,8 +299,7 @@ export function parseCatalog(entry: NodesEntry['entry']): Catalog {
   const styles = new Map<StyleId, {key: string; name: string; type: StyleType}>();
   for (const [id, item] of Object.entries(entry.styles === undefined ? {} : object(entry.styles))) {
     const s = object(item);
-    const type = choice(s.styleType, ['FILL', 'TEXT', 'EFFECT', 'GRID'], 'FILL');
-    if (s.styleType === undefined) bad();
+    const type = choice(s.styleType, ['FILL', 'TEXT', 'EFFECT', 'GRID']);
     styles.set(styleId(id), {key: string(s.key), name: string(s.name), type});
   }
   const components = new Map<string, {name: string; setId: string | null}>();
