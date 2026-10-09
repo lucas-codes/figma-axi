@@ -26,9 +26,10 @@ export const run: Handler<RenderDef> = async ({ref, flags}, ctx) => {
   if (failed.length)
     throw new AxiError({code: 'render_failed'}, 'Figma could not render node ' + failed.map(urlForm).join(', ') + (response.err ? ': ' + response.err : ''),
       ['Check the node can be rendered in Figma']);
+  const downloads = ref.nodeIds.map(id => ({id, url: parseImageUrl(response.images[id])}));
   const images = [];
-  for (const id of ref.nodeIds) {
-    const bytes = await fetchImage(parseImageUrl(response.images[id]), ctx.fetch, flags.format);
+  for (const {id, url} of downloads) {
+    const bytes = await fetchImage(url, ctx.fetch, flags.format);
     const path = join(flags.out, ref.fileKey, urlForm(id) + '@' + flags.scale + 'x.' + flags.format);
     await writeAtomic(path, bytes);
     images.push({node: urlForm(id), path, format: flags.format, bytes: bytes.byteLength});
