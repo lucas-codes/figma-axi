@@ -1,5 +1,5 @@
 import type {GetFileNodesResponse, GetLocalVariablesResponse} from '@figma/rest-api-spec';
-import type {DeepPartial} from '../harness.ts';
+import type {DeepPartial, Scenario} from '../harness.ts';
 export const colorId = 'VariableID:5b33ff34fe49f7347b7d06be6778f40205860838/4096:10';
 export const radiusId = 'VariableID:cf9dcd3dd4ec51eb709e9b1ebfbc8e8fc8c78b90/4476:170';
 export const designFrame = {
@@ -53,3 +53,24 @@ export const unavailableSpec = {
   instances: [{id: '1-3', component: 'Assets/DialogHeader', variant: 'Positioning=Left', props: 'Dismiss=false;Icon=Positioning=Left'}],
   imageFills: 1,
 };
+const nodesUrl = 'https://api.figma.com/v1/files/AbC123xyz456/nodes?ids=1%3A2&depth=5';
+const variablesUrl = 'https://api.figma.com/v1/files/AbC123xyz456/variables/local';
+const counts = {hidden: 1, shapesOmitted: 1, beyondLimit: 0, instanceLayersSkipped: 1};
+const help = ['Run `figma-axi assets AbC123xyz456 --node 1-2` to save 1 image fill', 'Run `figma-axi spec AbC123xyz456 --node 1-3` for the layers inside an instance', 'Run `figma-axi render AbC123xyz456 --node 1-2` to see this frame'];
+const resolvedSpec = {
+  ...unavailableSpec,
+  layers: unavailableSpec.layers.map((layer, i) => i === 0 ? {...layer, fill: 'solid #FFFFFF <Primitives/Grey/$white> <white>', radius: '12 <radius/md>'} : layer),
+  tokens: [unavailableSpec.tokens[0], {...unavailableSpec.tokens[1], label: 'white', code: 'var(--white)'}, {...unavailableSpec.tokens[2], label: 'radius/md'}],
+};
+export const partialNames = {...variableNames, meta: {...variableNames.meta, variables: {[colorId]: variableNames.meta.variables[colorId]}}} satisfies DeepPartial<GetLocalVariablesResponse>;
+export const unboundFrame = {name: 'Trade-ins', nodes: {'1:2': {components: {}, styles: designFrame.nodes['1:2'].styles, document: {id: '1:2', type: 'FRAME', name: 'Unbound', fills: [{type: 'SOLID', color: {r: 1, g: 1, b: 1, a: 1}}], styles: {fill: '4010:3255'}}}}} satisfies DeepPartial<GetFileNodesResponse>;
+export const goldenCases = {
+  'spec-unavailable': {argv: ['spec', 'AbC123xyz456', '--node', '1-2'], routes: {[nodesUrl]: {body: designFrame}, [variablesUrl]: {status: 403, body: {message: 'Invalid scope(s): file_variables:read'}}}, exit: 0,
+    model: {file: 'Trade-ins', node: '1-2', depth: 5, variableNames: 'unavailable', ...counts, ...unavailableSpec, attention: ['Variable names are unavailable (Figma 403: Invalid scope(s): file_variables:read). They need a token with the file_variables:read scope on an Enterprise org; until then labels are var.<key prefix> and the value column is what the design resolves to'], help}},
+  'spec-resolved': {argv: ['spec', 'AbC123xyz456', '--node', '1-2'], routes: {[nodesUrl]: {body: designFrame}, [variablesUrl]: {body: variableNames}}, exit: 0,
+    model: {file: 'Trade-ins', node: '1-2', depth: 5, variableNames: 'resolved', ...counts, ...resolvedSpec, help}},
+  'spec-partial': {argv: ['spec', 'AbC123xyz456', '--node', '1-2'], routes: {[nodesUrl]: {body: designFrame}, [variablesUrl]: {body: partialNames}}, exit: 0,
+    model: {file: 'Trade-ins', node: '1-2', depth: 5, variableNames: 'partial', ...counts, ...resolvedSpec, layers: resolvedSpec.layers.map((layer, i) => i === 0 ? {...layer, radius: '12 <var.cf9dcd3d>'} : layer), tokens: [resolvedSpec.tokens[0], resolvedSpec.tokens[1], unavailableSpec.tokens[2]], attention: ['1 referenced variable has no matching name; unmatched labels are var.<key prefix>'], help}},
+  'spec-none-bound': {argv: ['spec', 'AbC123xyz456', '--node', '1-2'], routes: {[nodesUrl]: {body: unboundFrame}}, exit: 0,
+    model: {file: 'Trade-ins', node: '1-2', depth: 5, variableNames: 'none-bound', hidden: 0, shapesOmitted: 0, beyondLimit: 0, instanceLayersSkipped: 0, layers: [{depth: 0, id: '1-2', type: 'FRAME', name: 'Unbound', size: null, layout: null, fill: 'solid #FFFFFF <Primitives/Grey/$white>', stroke: null, radius: null, effect: null, text: null}], tokens: [unavailableSpec.tokens[0]], instances: [], imageFills: 0, help: ['Run `figma-axi render AbC123xyz456 --node 1-2` to see this frame']}},
+} satisfies Record<string, Scenario>;

@@ -43,6 +43,10 @@ for (const field of [{fills: {}}, {fills: [{type: 'SOLID', color: {r: 'bad', g: 
   test('known style fields reject malformed values: ' + JSON.stringify(field), () => {
     assert.throws(() => parseNodeTree({id: '1:2', name: 'Bad', type: 'INSTANCE', ...field}, parseStyleFacet), (e: unknown) => e instanceof AxiError && e.detail.code === 'bad_response');
   });
+test('sizing cells never invent a missing axis', () => {
+  const fixture = {id: '1:2', type: 'FRAME', name: 'Partial sizing', absoluteBoundingBox: {width: 10, height: 20}, layoutSizingHorizontal: 'FIXED'} satisfies DeepPartial<FrameNode>;
+  assert.equal(buildSpec(walkLayers(parseNodeTree(fixture, parseStyleFacet), {maxDepth: 5, limit: 300}), parseCatalog({}), {status: 'none-bound'}).layers[0]?.size, '10x20');
+});
 test('nonuniform corners preserve all four values and explicit zeros', () => {
   const fixture = {id: '1:2', type: 'FRAME', name: 'Corners', rectangleCornerRadii: [8, 0, 0, 0], strokes: [{type: 'SOLID', color: {r: 0, g: 0, b: 0, a: 1}}], individualStrokeWeights: {top: 1, right: 0, bottom: 0, left: 0}} satisfies DeepPartial<FrameNode>;
   const row = buildSpec(walkLayers(parseNodeTree(fixture, parseStyleFacet), {maxDepth: 5, limit: 300}), parseCatalog({}), {status: 'none-bound'}).layers[0];
@@ -61,8 +65,15 @@ test('local ids and colliding library prefixes remain traceable; repeated uses c
   assert.deepEqual(spec.tokens, [
     {label: 'var.aaaaaaaa1', source: 'variable', id: a, value: '8', fields: 'gap/padding/radius', uses: 2, code: null},
     {label: 'var.aaaaaaaa2', source: 'variable', id: b, value: '8', fields: 'padding', uses: 1, code: null},
-    {label: 'var.VariableID-4-5', source: 'variable', id: 'VariableID:4:5', value: '0.5', fields: 'opacity', uses: 1, code: null},
+    {label: 'var.4-5', source: 'variable', id: 'VariableID:4:5', value: '0.5', fields: 'opacity', uses: 1, code: null},
   ]);
+});
+test('text bindings preserve evaluated line height and font values while mixed styles are marked', () => {
+  const fontId = 'VariableID:e08a914cde4ca0475503484e3baa173b84038a7f/3519:269';
+  const fixture = {id: '1:2', type: 'TEXT', name: 'Type', characters: 'Text', style: {fontFamily: 'Inter', fontWeight: 600, fontSize: 18, lineHeightPx: 24, boundVariables: {fontFamily: {type: 'VARIABLE_ALIAS', id: fontId}}}, boundVariables: {fontFamily: [{type: 'VARIABLE_ALIAS', id: fontId}], lineHeight: [{type: 'VARIABLE_ALIAS', id: radiusId}]}, styles: {text: '6001:3338'}} satisfies DeepPartial<TextNode>;
+  const spec = buildSpec(walkLayers(parseNodeTree(fixture, parseStyleFacet), {maxDepth: 5, limit: 300}), parseCatalog({styles: {'6001:3338': {key: 'e8a0c87c9b7355c4de6c109211dd7f4706410817', name: 'Heading/--headingLg', styleType: 'TEXT'}}}), {status: 'unavailable', figma: null});
+  assert.equal(spec.layers[0]?.text, 'Inter <var.e08a914c> 600 18/24 <Heading/--headingLg> <var.cf9dcd3d>');
+  assert.deepEqual(spec.tokens.map(t => [t.label, t.value]), [['var.e08a914c', 'Inter'], ['Heading/--headingLg', 'Inter 600 18/24'], ['var.cf9dcd3d', '24']]);
 });
 test('duplicate names across collections qualify; unmatched ids retain fallback labels', () => {
   const sameName = {...variableNames, meta: {...variableNames.meta, variables: {

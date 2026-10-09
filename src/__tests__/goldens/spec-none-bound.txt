@@ -1,0 +1,15 @@
+file: Trade-ins
+node: 1-2
+depth: 5
+variableNames: none-bound
+hidden: 0
+shapesOmitted: 0
+beyondLimit: 0
+instanceLayersSkipped: 0
+layers[1]{depth,id,type,name,size,layout,fill,stroke,radius,effect,text}:
+  0,1-2,FRAME,Unbound,null,null,solid #FFFFFF <Primitives/Grey/$white>,null,null,null,null
+tokens[1]{label,source,id,value,fields,uses,code}:
+  Primitives/Grey/$white,style,de03efcb555feb117490f875d1c3b4561ccc9671,"#FFFFFF",fill,1,null
+instances: []
+imageFills: 0
+help[1]: Run `figma-axi render AbC123xyz456 --node 1-2` to see this frame
