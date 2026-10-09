@@ -2,4 +2,4 @@ error: Figma refused the request (403)
 code: forbidden
 status: 403
 figma: Invalid token
-help[1]: "Check FIGMA_TOKEN has the current_user:read scope"
+help[1]: "Check FIGMA_TOKEN is a valid, unexpired personal access token"

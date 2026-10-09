@@ -103,6 +103,8 @@ export async function figmaGet(op: Operation, rt: {env: Env; fetch: typeof globa
         case 400: help = 'Check the URL, node id and flags'; break;
         default: help = 'Figma returned HTTP ' + response.status + '; retry later';
       }
+      if (figma?.startsWith('Invalid token')) help = 'Check FIGMA_TOKEN is a valid, unexpired personal access token';
+      else if (figma?.startsWith('Invalid scope')) help = 'Check FIGMA_TOKEN has the ' + SCOPE[op.op] + ' scope';
       throw new AxiError({code, status: response.status, figma}, 'Figma refused the request (' + response.status + ')', [help]);
     }
     if (!json) throw new AxiError({code: 'bad_response'}, 'Expected JSON response', ['Check the Figma API response']);

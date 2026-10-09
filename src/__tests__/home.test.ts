@@ -31,7 +31,7 @@ for (const scenario of [
   assert.deepEqual(JSON.parse(result.output), {
     error: 'Figma refused the request (' + scenario.status + ')', code: scenario.code,
     status: scenario.status, figma: scenario.figma,
-    help: [scenario.status === 401 ? 'Check FIGMA_TOKEN is a valid, unexpired personal access token' : 'Check FIGMA_TOKEN has the current_user:read scope'],
+    help: ['Check FIGMA_TOKEN has the current_user:read scope'],
   });
 });
 test('home refuses malformed current-user data', async () => {
