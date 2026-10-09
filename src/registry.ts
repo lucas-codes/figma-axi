@@ -7,7 +7,8 @@ import { run as outline } from './commands/outline.ts';
 import { run as inspect } from './commands/inspect.ts';
 import { run as render } from './commands/render.ts';
 import { run as comments } from './commands/comments.ts';
-export type CommandName = 'home' | 'outline' | 'inspect' | 'render' | 'comments';
+import { run as spec } from './commands/spec.ts';
+export type CommandName = 'home' | 'outline' | 'inspect' | 'render' | 'comments' | 'spec';
 export type FlagDef =
   | { kind: 'boolean'; description: string }
   | { kind: 'integer' | 'number'; min: number; max: number; default: number; description: string }
@@ -37,22 +38,27 @@ export type Handler<D extends CommandDef<Record<string, FlagDef>>> = (
 const limit = {kind: 'integer', min: 1, max: Number.MAX_SAFE_INTEGER, default: 300, description: 'max rows before omitting'} as const;
 const full = {kind: 'boolean', description: 'no text truncation and no row limit'} as const;
 const node = {kind: 'string', default: null, description: 'node id as 1-2 or 1:2 (from URL node-id by default)'} as const;
+const depth = {kind: 'integer', min: 1, max: 20, default: 5, description: 'levels below the node to fetch (1-20)'} as const;
 export const DEFS = {
   home: {name: 'home', summary: 'Current user and setup status', positional: null, flags: {}, examples: ['figma-axi', 'figma-axi --json']},
   outline: {name: 'outline', summary: 'Pages and top-level frames in a file', positional: {name: 'url-or-key', needsNode: false}, flags: {limit}, examples: ['figma-axi outline "https://www.figma.com/design/<key>/<name>"', 'figma-axi outline <key> --limit 100']},
-  inspect: {name: 'inspect', summary: 'Layers and text of one node as a depth-first table', positional: {name: 'url-or-key', needsNode: true}, flags: {node, depth: {kind: 'integer', min: 1, max: 20, default: 5, description: 'levels below the node to fetch (1-20)'}, limit, full}, examples: ['figma-axi inspect "https://www.figma.com/design/<key>/<name>?node-id=1-2"', 'figma-axi inspect <key> --node 1-2 --depth 8', 'figma-axi <figma-url-with-node-id>']},
+  inspect: {name: 'inspect', summary: 'Layers and text of one node as a depth-first table', positional: {name: 'url-or-key', needsNode: true}, flags: {node, depth, limit, full}, examples: ['figma-axi inspect "https://www.figma.com/design/<key>/<name>?node-id=1-2"', 'figma-axi inspect <key> --node 1-2 --depth 8', 'figma-axi <figma-url-with-node-id>']},
   render: {name: 'render', summary: 'Render one node to a local image', positional: {name: 'url-or-key', needsNode: true}, flags: {node, format: {kind: 'enum', values: ['png', 'jpg', 'svg'], default: 'png', description: 'image format'}, scale: {kind: 'number', min: 0.01, max: 4, default: 1, description: 'image scale (0.01-4)'}, out: {kind: 'string', default: '$TMPDIR/figma-axi', description: 'output directory'}}, examples: ['figma-axi render "https://www.figma.com/design/<key>/<name>?node-id=1-2"', 'figma-axi render <key> --node 1-2 --scale 2']},
   comments: {name: 'comments', summary: 'Open designer threads pinned to a file', positional: {name: 'url-or-key', needsNode: false}, flags: {resolved: {kind: 'boolean', description: 'include resolved threads'}, limit: {...limit, default: 100}, full}, examples: ['figma-axi comments "https://www.figma.com/design/<key>/<name>"', 'figma-axi comments <key> --resolved --full']},
+  spec: {name: 'spec', summary: 'Design-to-code spec of one node: layout, colours, typography, effects, tokens and component props', positional: {name: 'url-or-key', needsNode: true}, flags: {node, depth, limit}, examples: ['figma-axi spec "https://www.figma.com/design/<key>/<name>?node-id=1-2"', 'figma-axi spec <key> --node 1-2 --depth 8']},
 } as const satisfies {[K in CommandName]: CommandDef<Record<string, FlagDef>>};
 export type HomeDef = typeof DEFS.home;
 export type OutlineDef = typeof DEFS.outline;
 export type InspectDef = typeof DEFS.inspect;
 export type RenderDef = typeof DEFS.render;
 export type CommentsDef = typeof DEFS.comments;
+export type SpecDef = typeof DEFS.spec;
 export const REGISTRY = {
   home: {def: DEFS.home, run: home}, outline: {def: DEFS.outline, run: outline},
   inspect: {def: DEFS.inspect, run: inspect}, render: {def: DEFS.render, run: render}, comments: {def: DEFS.comments, run: comments},
+  spec: {def: DEFS.spec, run: spec},
 } satisfies {[K in CommandName]: {def: (typeof DEFS)[K]; run: Handler<(typeof DEFS)[K]>}};
+function isCommandName(command: string): command is CommandName {return Object.hasOwn(DEFS, command);}
 export function route(args: Args): {name: CommandName; positional: string | undefined} {
   const command = args.command ?? 'home';
   if (/^(?:https:\/\/|figma\.com\/|www\.figma\.com\/)/.test(command)) {
@@ -62,7 +68,7 @@ export function route(args: Args): {name: CommandName; positional: string | unde
     if (args.positional.length) throw new AxiError({code: 'usage'}, 'Unexpected positional argument', ['Run `figma-axi --help` for examples']);
     return {name: url.searchParams.has('node-id') ? 'inspect' : 'outline', positional: command};
   }
-  if (command !== 'home' && command !== 'outline' && command !== 'inspect' && command !== 'render' && command !== 'comments')
+  if (!isCommandName(command))
     throw new AxiError({code: 'usage'}, 'Unknown command: ' + command, ['Run `figma-axi --help` for commands']);
   return {name: command, positional: args.positional[0]};
 }

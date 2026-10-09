@@ -49,6 +49,13 @@ Open designer threads pinned to a file. Flags: `--resolved`, `--limit`, `--full`
 - `figma-axi comments "https://www.figma.com/design/<key>/<name>"`
 - `figma-axi comments <key> --resolved --full`
 
+## `spec`
+
+Design-to-code spec of one node: layout, colours, typography, effects, tokens and component props. Flags: `--node`, `--depth`, `--limit`, `--json`.
+
+- `figma-axi spec "https://www.figma.com/design/<key>/<name>?node-id=1-2"`
+- `figma-axi spec <key> --node 1-2 --depth 8`
+
 ## Failures and trust
 
 Errors are stdout models with stable `code` and actionable `help`. Usage errors exit 2; other errors exit 1. figma-axi calls only the Figma REST API. On token_missing, unauthorized or forbidden, follow the error's help to fix FIGMA_TOKEN or file access; on transport_error, check connectivity and retry. Respect rate_limited retryAfter; the CLI never retries.
