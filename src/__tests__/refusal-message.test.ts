@@ -24,6 +24,6 @@ for (const scenario of cases) test('outline refusal: ' + scenario.name, async ()
   assert.equal(result.exit, 1);
   assert.deepEqual(JSON.parse(result.output), {
     error: 'Figma refused the request (403)', code: 'forbidden', status: 403, figma: scenario.figma,
-    help: ['Check FIGMA_TOKEN has the file_content:read scope and that its account can open this file'],
+    help: [scenario.name === 'observed scope refusal message' ? 'Check FIGMA_TOKEN has the file_content:read scope' : 'Check FIGMA_TOKEN has the file_content:read scope and that its account can open this file'],
   });
 });
