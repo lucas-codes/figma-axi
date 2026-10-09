@@ -15,6 +15,7 @@ for (const file of readdirSync(new URL('./goldens/', import.meta.url)).filter(fi
     const scenario = scenarios[file.slice(0, -4)];
     assert.ok(scenario, 'Fixture must export goldenCases for ' + file);
     const golden = readFileSync(new URL('./goldens/' + file, import.meta.url), 'utf8');
+    await scenario.prepare?.();
     const json = await run([...scenario.argv, '--json'], scenario.routes, scenario.env, scenario.tmpdir);
     assert.equal(json.exit, scenario.exit);
     const model = JSON.parse(json.output);

@@ -57,6 +57,10 @@ export async function main(argv: string[], runtime: Runtime = defaultRuntime): P
           const flags = parseFlags(args, REGISTRY.spec.def.flags);
           model = await REGISTRY.spec.run({ref: requireNode(parseRef(routed.positional!, flags.node), 'spec'), flags}, ctx); break;
         }
+        case 'assets': {
+          const flags = parseFlags(args, REGISTRY.assets.def.flags);
+          model = await REGISTRY.assets.run({ref: requireNode(parseRef(routed.positional!, flags.node), 'assets'), flags: {...flags, out: args.flags.has('out') ? flags.out : join(ctx.tmpdir, 'figma-axi')}}, ctx); break;
+        }
         case 'render': {
           const flags = parseFlags(args, REGISTRY.render.def.flags);
           model = await REGISTRY.render.run({ref: parseRenderRef(routed.positional!, flags.node), flags: {...flags, out: args.flags.has('out') ? flags.out : join(ctx.tmpdir, 'figma-axi')}}, ctx); break;

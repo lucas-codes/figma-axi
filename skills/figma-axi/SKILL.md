@@ -49,6 +49,13 @@ Open designer threads pinned to a file. Flags: `--resolved`, `--limit`, `--full`
 - `figma-axi comments "https://www.figma.com/design/<key>/<name>"`
 - `figma-axi comments <key> --resolved --full`
 
+## `assets`
+
+Save original image fills under one node, reusing verified local files. Flags: `--node`, `--limit`, `--out`, `--json`.
+
+- `figma-axi assets "https://www.figma.com/design/<key>/<name>?node-id=1-2"`
+- `figma-axi assets <key> --node 1-2 --limit 100`
+
 ## `spec`
 
 Design-to-code spec of one node: layout, colours, typography, effects, tokens and component props. Flags: `--node`, `--depth`, `--limit`, `--json`.
