@@ -35,7 +35,7 @@ test('invisible paints disappear; opacity folds into alpha; gradients, gif prece
   } satisfies DeepPartial<TextNode>;
   const root = parseNodeTree(fixture, parseStyleFacet);
   assert.deepEqual(buildSpec(walkLayers(root, {maxDepth: 5, limit: 300}), parseCatalog({}), {status: 'none-bound'}), {
-    layers: [{depth: 0, id: '1-2', type: 'TEXT', name: 'Styled', size: '13x24 abs', layout: null, fill: 'solid #FFFFFF80 + linear #000000>#FFFFFF + image bbbbbbbb fit', stroke: '1 inside solid #000000', radius: null, effect: 'drop(0 1 2 0 #0000001A) + bg-blur(4) opacity=0.5', text: 'Inter 400 14/auto align=right case=upper deco=underline mixed'}],
+    layers: [{depth: 0, id: '1-2', type: 'TEXT', name: 'Styled', size: '12.6x24 abs', layout: null, fill: 'solid #FFFFFF80 + linear #000000>#FFFFFF + image bbbbbbbb fit', stroke: '1 inside solid #000000', radius: null, effect: 'drop(0 1 2 0 #0000001A) + bg-blur(4) opacity=0.5', text: 'Inter 400 14/auto align=right case=upper deco=underline mixed'}],
     tokens: [], instances: [], imageFills: 1,
   });
 });
@@ -43,6 +43,26 @@ for (const field of [{fills: {}}, {fills: [{type: 'SOLID', color: {r: 'bad', g: 
   test('known style fields reject malformed values: ' + JSON.stringify(field), () => {
     assert.throws(() => parseNodeTree({id: '1:2', name: 'Bad', type: 'INSTANCE', ...field}, parseStyleFacet), (e: unknown) => e instanceof AxiError && e.detail.code === 'bad_response');
   });
+test('every numeric cell and evaluated token rounds float32 noise to two decimals without trailing zeros', () => {
+  const alias = {type: 'VARIABLE_ALIAS', id: radiusId} as const;
+  const fixture = {id: '1:2', type: 'TEXT', name: 'Numbers', characters: 'Text',
+    absoluteBoundingBox: {width: 12.600000381469727, height: 16.00000001},
+    layoutMode: 'HORIZONTAL', itemSpacing: 8.2000001, paddingTop: 1.2000001, paddingRight: 2.3000001, paddingBottom: 3.4000001, paddingLeft: 4.5000001,
+    strokes: [{type: 'SOLID', color: {r: 0, g: 0, b: 0, a: 1}}], strokeWeight: 0.800000011920929,
+    rectangleCornerRadii: [1.2000001, 2.3000001, 3.4000001, 4.5000001], opacity: 0.800000011920929,
+    effects: [{type: 'DROP_SHADOW', offset: {x: -0.20000000298023224, y: 0.800000011920929}, radius: 16.940000534057617, spread: 0.000001, color: {r: 0, g: 0, b: 0, a: 1}, boundVariables: {radius: alias}}, {type: 'LAYER_BLUR', radius: 2.3000001}],
+    style: {fontFamily: 'Inter', fontWeight: 400, fontSize: 16.00000001, lineHeightPx: 16.940000534057617, letterSpacing: -0.20000000298023224},
+    boundVariables: {opacity: alias, letterSpacing: [alias], lineHeight: [alias], size: {x: alias}, paddingTop: alias, itemSpacing: alias},
+  };
+  const spec = buildSpec(walkLayers(parseNodeTree(fixture, parseStyleFacet), {maxDepth: 5, limit: 300}), parseCatalog({}), {status: 'unavailable', figma: null});
+  assert.deepEqual(spec.layers, [{depth: 0, id: '1-2', type: 'TEXT', name: 'Numbers',
+    size: '12.6x16 <var.20293d10>', layout: 'row gap=8.2 <var.20293d10> pad=1.2/2.3/3.4/4.5 <var.20293d10> main=start cross=start',
+    fill: null, stroke: '0.8 inside solid #000000', radius: '1.2/2.3/3.4/4.5',
+    effect: 'drop(-0.2 0.8 16.94 0 #000000) <var.20293d10> + blur(2.3) opacity=0.8 <var.20293d10>',
+    text: 'Inter 400 16/16.94 ls=-0.2 <var.20293d10>',
+  }]);
+  assert.equal(spec.tokens[0]?.value, '12.6 / 8.2 / 1.2 / 16.94 / 0.8 / -0.2');
+});
 test('sizing cells never invent a missing axis', () => {
   const fixture = {id: '1:2', type: 'FRAME', name: 'Partial sizing', absoluteBoundingBox: {width: 10, height: 20}, layoutSizingHorizontal: 'FIXED'} satisfies DeepPartial<FrameNode>;
   assert.equal(buildSpec(walkLayers(parseNodeTree(fixture, parseStyleFacet), {maxDepth: 5, limit: 300}), parseCatalog({}), {status: 'none-bound'}).layers[0]?.size, '10x20');
