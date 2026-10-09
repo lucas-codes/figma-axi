@@ -20,6 +20,20 @@ for (const [name, scenario] of Object.entries(goldenCases)) test('literal golden
   assert.deepEqual(JSON.parse(json.output), scenario.model);
   if (name === 'home-unavailable') assert.deepEqual(result.calls, []);
 });
+for (const scenario of [
+  {name: '403 without a message', status: 403, body: {error: true, status: 403}, code: 'forbidden', figma: null},
+  {name: '403 with another message', status: 403, body: {message: 'Account access denied'}, code: 'forbidden', figma: 'Account access denied'},
+  {name: '403 with a non-prefix scope mention', status: 403, body: {message: 'Denied: Invalid scope'}, code: 'forbidden', figma: 'Denied: Invalid scope'},
+  {name: '401 mentioning scope', status: 401, body: {message: 'Invalid scope'}, code: 'unauthorized', figma: 'Invalid scope'},
+]) test('home still refuses ' + scenario.name, async () => {
+  const result = await run(['--json'], {'https://api.figma.com/v1/me': {status: scenario.status, body: scenario.body}});
+  assert.equal(result.exit, 1);
+  assert.deepEqual(JSON.parse(result.output), {
+    error: 'Figma refused the request (' + scenario.status + ')', code: scenario.code,
+    status: scenario.status, figma: scenario.figma,
+    help: [scenario.status === 401 ? 'Check FIGMA_TOKEN is a valid, unexpired personal access token' : 'Check FIGMA_TOKEN has the current_user:read scope'],
+  });
+});
 test('home refuses malformed current-user data', async () => {
   const result = await run([], {'https://api.figma.com/v1/me': {body: {handle: 'lucas'}}});
   assert.equal(result.exit, 1);

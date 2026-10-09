@@ -12,17 +12,23 @@ function parseMe(raw: unknown): Me {
 }
 export const run: Handler<HomeDef> = async (_input, ctx) => {
   const base = {bin: ctx.bin, description: DESCRIPTION, version: VERSION};
+  const help = [
+    'Run `figma-axi <figma-url>` to outline a file or inspect the frame its node-id points at',
+    'Run `figma-axi render <figma-url>` for a PNG of that frame',
+    'Run `figma-axi --help` for every command and flag',
+  ];
   let me: Me;
   try { me = parseMe(await ctx.figma({op: 'getMe'})); }
   catch (error) {
-    if (!(error instanceof AxiError) || error.detail.code !== 'token_missing') throw error;
+    if (!(error instanceof AxiError)) throw error;
+    if (error.detail.code === 'forbidden' && error.detail.figma?.startsWith('Invalid scope'))
+      return {...base, auth: 'ok', attention: [
+        'FIGMA_TOKEN works but lacks the current_user:read scope, so the account is not shown. File commands are unaffected; add the scope to show it',
+      ], help};
+    if (error.detail.code !== 'token_missing') throw error;
     return {...base, auth: 'unavailable',
       attention: ['FIGMA_TOKEN is not set. Create a personal access token in Figma (Settings then Security) with file_content, file_comments and current_user read scopes and export it'],
       help: ['Run `figma-axi --help` for setup and every command']};
   }
-  return {...base, auth: 'ok (' + me.handle + ' <' + me.email + '>)', help: [
-    'Run `figma-axi <figma-url>` to outline a file or inspect the frame its node-id points at',
-    'Run `figma-axi render <figma-url>` for a PNG of that frame',
-    'Run `figma-axi --help` for every command and flag',
-  ]};
+  return {...base, auth: 'ok (' + me.handle + ' <' + me.email + '>)', help};
 };
