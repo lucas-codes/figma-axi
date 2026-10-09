@@ -110,12 +110,13 @@ function color(raw: unknown, opacity = 1): Hex {
   return result;
 }
 function quad(raw: unknown): Quad {const q = array(raw); if (q.length !== 4) bad(); return [number(q[0]), number(q[1]), number(q[2]), number(q[3])];}
+function formatNumber(value: number): string {return String(Number(value.toFixed(2)));}
 function compact(q: Quad): string {
   const [t, r, b, l] = q;
-  if (t === r && t === b && t === l) return String(t);
-  if (t === b && r === l) return t + '/' + r;
-  if (r === l) return t + '/' + r + '/' + b;
-  return q.join('/');
+  if (t === r && t === b && t === l) return formatNumber(t);
+  if (t === b && r === l) return formatNumber(t) + '/' + formatNumber(r);
+  if (r === l) return formatNumber(t) + '/' + formatNumber(r) + '/' + formatNumber(b);
+  return q.map(formatNumber).join('/');
 }
 function paintValue(p: Paint): string {
   switch (p.kind) {
@@ -128,8 +129,8 @@ function paintValue(p: Paint): string {
 }
 function effectValue(e: Shadow): string {
   switch (e.kind) {
-    case 'drop': case 'inner': return e.kind + '(' + [e.x, e.y, e.blur, e.spread, e.color].join(' ') + ')';
-    case 'blur': case 'bg-blur': return e.kind + '(' + e.radius + ')';
+    case 'drop': case 'inner': return e.kind + '(' + [...[e.x, e.y, e.blur, e.spread].map(formatNumber), e.color].join(' ') + ')';
+    case 'blur': case 'bg-blur': return e.kind + '(' + formatNumber(e.radius) + ')';
     case 'other': return e.type;
     default: {const exhaustive: never = e; return exhaustive;}
   }
@@ -195,10 +196,10 @@ export const parseStyleFacet: FacetParser<StyleFacet> = (raw, type) => {
       const offset = object(e.offset), x = number(offset.x), y = number(offset.y);
       const blur = number(e.radius), spread = numeric(e, 'spread'), hex = color(e.color);
       effect = {kind: kind === 'DROP_SHADOW' ? 'drop' : 'inner', x, y, blur, spread, color: hex};
-      Object.assign(values, {color: hex, radius: String(blur), spread: String(spread), offsetX: String(x), offsetY: String(y)});
+      Object.assign(values, {color: hex, radius: formatNumber(blur), spread: formatNumber(spread), offsetX: formatNumber(x), offsetY: formatNumber(y)});
     } else if (kind === 'LAYER_BLUR' || kind === 'BACKGROUND_BLUR') {
       effect = {kind: kind === 'LAYER_BLUR' ? 'blur' : 'bg-blur', radius: number(e.radius)};
-      values.radius = String(effect.radius);
+      values.radius = formatNumber(effect.radius);
     } else effect = {kind: 'other', type: kind};
     if (!visible) continue;
     localBindings(e.boundVariables, 'effect', 'effect.' + effects.length, values);
@@ -230,7 +231,7 @@ export const parseStyleFacet: FacetParser<StyleFacet> = (raw, type) => {
     const textCase = choice(style.textCase, ['ORIGINAL', 'UPPER', 'LOWER', 'TITLE', 'SMALL_CAPS', 'SMALL_CAPS_FORCED'], 'ORIGINAL');
     const deco = choice(style.textDecoration, ['NONE', 'UNDERLINE', 'STRIKETHROUGH'], 'NONE');
     text = {family: string(style.fontFamily), weight: number(style.fontWeight), size: number(style.fontSize), lineHeightPx: style.lineHeightPx === undefined ? null : number(style.lineHeightPx), letterSpacing: numeric(style, 'letterSpacing'), align: alignment === 'LEFT' ? 'left' : alignment === 'CENTER' ? 'center' : alignment === 'RIGHT' ? 'right' : 'justified', textCase: textCase === 'UPPER' ? 'upper' : textCase === 'LOWER' ? 'lower' : textCase === 'TITLE' ? 'title' : null, decoration: deco === 'UNDERLINE' ? 'underline' : deco === 'STRIKETHROUGH' ? 'strike' : null, mixed: raw.styleOverrideTable !== undefined && Object.keys(object(raw.styleOverrideTable)).length > 0};
-    localBindings(style.boundVariables, 'font', 'text', {fontFamily: text.family, fontSize: String(text.size), fontWeight: String(text.weight), letterSpacing: String(text.letterSpacing), lineHeight: text.lineHeightPx === null ? null : String(text.lineHeightPx), fontStyle: style.fontStyle === undefined ? null : string(style.fontStyle), paragraphSpacing: style.paragraphSpacing === undefined ? null : String(number(style.paragraphSpacing)), paragraphIndent: style.paragraphIndent === undefined ? null : String(number(style.paragraphIndent))});
+    localBindings(style.boundVariables, 'font', 'text', {fontFamily: text.family, fontSize: formatNumber(text.size), fontWeight: formatNumber(text.weight), letterSpacing: formatNumber(text.letterSpacing), lineHeight: text.lineHeightPx === null ? null : formatNumber(text.lineHeightPx), fontStyle: style.fontStyle === undefined ? null : string(style.fontStyle), paragraphSpacing: style.paragraphSpacing === undefined ? null : formatNumber(number(style.paragraphSpacing)), paragraphIndent: style.paragraphIndent === undefined ? null : formatNumber(number(style.paragraphIndent))});
   }
   const styles: StyleFacet['styles'] = {};
   if (raw.styles !== undefined) {
@@ -240,7 +241,7 @@ export const parseStyleFacet: FacetParser<StyleFacet> = (raw, type) => {
   const scalarValue = (key: string): string | null => {
     const value = key === 'lineHeight' ? style?.lineHeightPx : raw[key] ?? style?.[key];
     if (value === undefined || value === null) return null;
-    return typeof value === 'string' ? string(value) : String(number(value));
+    return typeof value === 'string' ? string(value) : formatNumber(number(value));
   };
   const bound = raw.boundVariables === undefined ? {} : object(raw.boundVariables);
   for (const key of Object.keys(bound)) {
@@ -252,12 +253,12 @@ export const parseStyleFacet: FacetParser<StyleFacet> = (raw, type) => {
       const entries = object(aliases);
       for (const [sub, alias] of Object.entries(entries)) {
         let value: string | null = null;
-        if (key === 'size') value = size === null ? null : sub === 'x' ? String(size.w) : sub === 'y' ? String(size.h) : null;
-        else if (key === 'individualStrokeWeights') value = weights === null || weights[sub] === undefined ? null : String(number(weights[sub]));
+        if (key === 'size') value = size === null ? null : sub === 'x' ? formatNumber(size.w) : sub === 'y' ? formatNumber(size.h) : null;
+        else if (key === 'individualStrokeWeights') value = weights === null || weights[sub] === undefined ? null : formatNumber(number(weights[sub]));
         else {
-          const indexes: Record<string, number> = {RECTANGLE_TOP_LEFT_CORNER_RADIUS: 0, RECTANGLE_TOP_RIGHT_CORNER_RADIUS: 1, RECTANGLE_BOTTOM_RIGHT_CORNER_RADIUS: 2, RECTANGLE_BOTTOM_LEFT_CORNER_RADIUS: 3};
+          const indexes: Record<string, 0 | 1 | 2 | 3> = {RECTANGLE_TOP_LEFT_CORNER_RADIUS: 0, RECTANGLE_TOP_RIGHT_CORNER_RADIUS: 1, RECTANGLE_BOTTOM_RIGHT_CORNER_RADIUS: 2, RECTANGLE_BOTTOM_LEFT_CORNER_RADIUS: 3};
           const index = indexes[sub];
-          value = radii === null || index === undefined ? corner === null ? null : String(corner) : String(radii[index]);
+          value = radii === null || index === undefined ? corner === null ? null : formatNumber(corner) : formatNumber(radii[index]);
         }
         add(alias, field, value, target);
       }
@@ -272,7 +273,7 @@ export const parseStyleFacet: FacetParser<StyleFacet> = (raw, type) => {
           const values = (key === 'strokes' ? strokePaints : fills).filter(p => p.kind === 'solid').map(p => p.color);
           value = values.length === 1 ? values[0] ?? null : null;
         } else if (key === 'effects') value = null;
-        else if (key.endsWith('Radius')) value = radius === null ? null : typeof radius === 'number' ? String(radius) : String(radius[key === 'topLeftRadius' ? 0 : key === 'topRightRadius' ? 1 : key === 'bottomRightRadius' ? 2 : 3]);
+        else if (key.endsWith('Radius')) value = radius === null ? null : typeof radius === 'number' ? formatNumber(radius) : formatNumber(radius[key === 'topLeftRadius' ? 0 : key === 'topRightRadius' ? 1 : key === 'bottomRightRadius' ? 2 : 3]);
         else value = scalarValue(key);
         add(alias, field, value, target);
       }
@@ -408,14 +409,14 @@ export function buildSpec(walk: Walk<StyleFacet>, catalog: Catalog, naming: Nami
       const extra = variableTokens(column);
       return value === null ? extra.trim() || null : value + extra;
     };
-    let size = f.size === null ? null : Math.round(f.size.w) + 'x' + Math.round(f.size.h);
+    let size = f.size === null ? null : formatNumber(f.size.w) + 'x' + formatNumber(f.size.h);
     if (size !== null && f.sizing !== null) size += ' ' + f.sizing.h + '/' + f.sizing.v;
     if (size !== null && f.absolute) size += ' abs';
     size = finish('size', size);
     let layout: string | null = null;
     if (f.layout !== null) {
       const l = f.layout;
-      layout = l.direction + ' gap=' + l.gap + variableTokens('layout.gap') + ' pad=' + compact(l.pad) + variableTokens('layout.pad') + ' main=' + l.main + ' cross=' + l.cross + (l.wrap ? ' wrap' : '');
+      layout = l.direction + ' gap=' + formatNumber(l.gap) + variableTokens('layout.gap') + ' pad=' + compact(l.pad) + variableTokens('layout.pad') + ' main=' + l.main + ' cross=' + l.cross + (l.wrap ? ' wrap' : '');
     }
     layout = finish('layout', layout);
     const formatPaints = (paints: readonly Paint[], slot: 'fill' | 'stroke'): string | null => {
@@ -430,13 +431,13 @@ export function buildSpec(walk: Walk<StyleFacet>, catalog: Catalog, naming: Nami
     const fill = finish('fill', formatPaints(f.fills, 'fill'));
     let stroke: string | null;
     if (f.strokes === null) stroke = formatPaints([], 'stroke');
-    else stroke = (typeof f.strokes.weight === 'number' ? String(f.strokes.weight) : f.strokes.weight.join('/')) + ' ' + f.strokes.align + ' ' + formatPaints(f.strokes.paints, 'stroke');
+    else stroke = (typeof f.strokes.weight === 'number' ? formatNumber(f.strokes.weight) : f.strokes.weight.map(formatNumber).join('/')) + ' ' + f.strokes.align + ' ' + formatPaints(f.strokes.paints, 'stroke');
     stroke = finish('stroke', stroke);
-    const radius = finish('radius', f.radius === null ? null : typeof f.radius === 'number' ? String(f.radius) : f.radius.join('/'));
+    const radius = finish('radius', f.radius === null ? null : typeof f.radius === 'number' ? formatNumber(f.radius) : f.radius.map(formatNumber).join('/'));
     const baseEffect = f.effects.map(effectValue).join(' + ');
     const effectStyle = styleToken('effect', baseEffect || null);
     let effect = f.effects.map((e, index) => effectValue(e) + (index === 0 ? effectStyle : '') + variableTokens('effect.' + index)).join(' + ') || effectStyle.trim() || null;
-    if (f.opacity < 1) effect = (effect === null ? '' : effect + ' ') + 'opacity=' + f.opacity;
+    if (f.opacity < 1) effect = (effect === null ? '' : effect + ' ') + 'opacity=' + formatNumber(f.opacity);
     effect = finish('effect', effect);
     let text: string | null = null;
     if (f.text !== null) {
@@ -448,7 +449,7 @@ export function buildSpec(walk: Walk<StyleFacet>, catalog: Catalog, naming: Nami
         const label = labels.get(b.variable.id);
         if (label !== undefined) familyTokens.push(use('variable', b.variable.id, label, b.value, b.field, node.id, names.get(b.variable.id)?.code ?? null));
       }
-      const base = t.family + ' ' + t.weight + ' ' + t.size + '/' + (t.lineHeightPx ?? 'auto') + (t.letterSpacing ? ' ls=' + t.letterSpacing : '') + (t.align === 'left' ? '' : ' align=' + t.align) + (t.textCase === null ? '' : ' case=' + t.textCase) + (t.decoration === null ? '' : ' deco=' + t.decoration) + (t.mixed ? ' mixed' : '');
+      const base = t.family + ' ' + formatNumber(t.weight) + ' ' + formatNumber(t.size) + '/' + (t.lineHeightPx === null ? 'auto' : formatNumber(t.lineHeightPx)) + (t.letterSpacing ? ' ls=' + formatNumber(t.letterSpacing) : '') + (t.align === 'left' ? '' : ' align=' + t.align) + (t.textCase === null ? '' : ' case=' + t.textCase) + (t.decoration === null ? '' : ' deco=' + t.decoration) + (t.mixed ? ' mixed' : '');
       text = t.family + (familyTokens.length ? ' ' + [...new Set(familyTokens)].join(' ') : '') + base.slice(t.family.length) + styleToken('text', base);
     } else text = styleToken('text', null).trim() || null;
     text = finish('text', text);
