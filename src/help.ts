@@ -1,5 +1,5 @@
 import {DEFS, SVG_GUIDANCE, type CommandName, type FlagDef} from './registry.ts';
-export const VERSION = '0.1.0'; // x-release-please-version
+export const VERSION = '0.2.0'; // x-release-please-version
 export const DESCRIPTION = 'Read-only Figma REST for agents: frames, layer text, rendered images and comments.';
 export function commandHelp(name: CommandName) {
   const def = DEFS[name];
