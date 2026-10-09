@@ -1,6 +1,6 @@
 ---
 name: figma-axi
-description: Read Figma file outlines, node layers and text, rendered images, designer comments, and current-user setup status through the figma-axi CLI.
+description: Read Figma outlines, layers and text, design-to-code styling and token/component data, rendered images, comments, and current-user setup through the figma-axi CLI.
 ---
 
 # figma-axi
@@ -55,6 +55,21 @@ Design-to-code spec of one node: layout, colours, typography, effects, tokens an
 
 - `figma-axi spec "https://www.figma.com/design/<key>/<name>?node-id=1-2"`
 - `figma-axi spec <key> --node 1-2 --depth 8`
+
+Read `layers` for evaluated styling, `tokens` for identities and names, and `instances` for component family, VARIANT properties and other props. Drill into a collapsed instance with `spec --node <id>`; increase --depth or --limit for omitted layers. Counts disclose hidden layers, omitted shapes, instance internals and image fills.
+
+Cells use this grammar; references are `<label>`:
+- size: `w x h` without spaces, optional `fixed|hug|fill/fixed|hug|fill` when both sizing axes are supplied, optional `abs`.
+- layout: `row|col|grid gap=n pad=t/r/b/l main=start|center|end|between cross=start|center|end|baseline|stretch`, optional `wrap`; padding uses CSS shorthand and tokens follow gap/padding.
+- fill: `solid #RRGGBB[AA]`, `linear|radial|angular|diamond #HEX>#HEX`, or `image ref8 fill|fit|tile|stretch`; paints join with ` + `, invisible paints are omitted, and paint opacity folds into alpha.
+- stroke: weight or `t/r/b/l`, `inside|outside|center`, then paint and tokens.
+- radius: a number or `tl/tr/br/bl`, then tokens.
+- effect: `drop(x y blur spread hex)`, `inner(...)`, `blur(r)`, or `bg-blur(r)`, joined with ` + `; layer opacity below 1 adds `opacity=n`.
+- text: `family weight size/lineHeightPx|auto`, optional `ls=`, `align=`, `case=`, `deco=`, `mixed`; family tokens follow the family, text-style tokens follow the base typography. Mixed means overrides exist, not that every text range is described.
+
+Token rows carry the full alias id or style key in `id`, evaluated `value`, bound `fields`, distinct layer `uses`, and Figma WEB `code` when supplied. Distinct evaluated values join with ` / `; group aliases without a precise evaluated value stay null. Style names come from the node response. Variable names are probed once only when selected rows have bindings: variableNames is resolved, partial (unmatched count in attention), unavailable (variables-endpoint 403), or none-bound (no lookup). Unavailable/unmatched names use var.<key prefix>, starting at 8 hex and lengthened for collisions; local aliases use var.<URL-form id>. Evaluated values survive a 403; names require file_variables:read on an eligible Enterprise org. Other failures propagate. There is no variable flag or cache.
+
+Variants come from VARIANT properties, not component names. INSTANCE_SWAP resolves through the node catalog when known, otherwise keeps its id. Property-name #id suffixes are dropped only without collisions. Original image-fill downloads are a separate assets delivery; use render for the composed frame.
 
 ## Failures and trust
 
