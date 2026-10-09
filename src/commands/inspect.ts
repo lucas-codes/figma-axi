@@ -1,25 +1,11 @@
-import type {GetFileNodesResponse} from '@figma/rest-api-spec';
-import {AxiError} from '../errors.ts';
 import type {Handler, InspectDef} from '../registry.ts';
 import {urlForm} from '../ref.ts';
-import {sanitize} from '../security.ts';
-import {parseComponentNames, parseNodeTree, summarize} from '../summarize.ts';
-
-type FileMetadata = Pick<GetFileNodesResponse, 'name'>;
+import {parseComponentNames, parseNodesEntry, parseNodeTree, summarize} from '../summarize.ts';
 export const run: Handler<InspectDef> = async ({ref, flags}, ctx) => {
   const raw = await ctx.figma({op: 'getFileNodes', fileKey: ref.fileKey, query: {ids: ref.nodeId, depth: flags.depth}});
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !('name' in raw) || typeof raw.name !== 'string' ||
-      !('nodes' in raw) || !raw.nodes || typeof raw.nodes !== 'object' || Array.isArray(raw.nodes))
-    throw new AxiError({code: 'bad_response'}, 'Invalid file nodes response', ['Check the Figma API response']);
-  const file: FileMetadata = {name: sanitize(raw.name)};
+  const {file, document: node, entry} = parseNodesEntry(raw, ref);
   const id = urlForm(ref.nodeId);
-  if (!(ref.nodeId in raw.nodes) || Reflect.get(raw.nodes, ref.nodeId) === null)
-    throw new AxiError({code: 'node_not_found'}, 'Node ' + id + ' was not found',
-      ['Run `figma-axi outline ' + ref.fileKey + '` to list frames and their ids']);
-  const entry: unknown = Reflect.get(raw.nodes, ref.nodeId);
-  if (!entry || typeof entry !== 'object' || Array.isArray(entry) || !('document' in entry) || !('components' in entry))
-    throw new AxiError({code: 'bad_response'}, 'Invalid requested node response', ['Check the Figma API response']);
-  const document = parseNodeTree(entry.document);
+  const document = parseNodeTree(node);
   const summary = summarize(document, {
     maxDepth: flags.depth, limit: flags.full ? null : flags.limit, textMax: flags.full ? null : 200,
     componentNames: parseComponentNames(entry.components),
@@ -32,5 +18,5 @@ export const run: Handler<InspectDef> = async ({ref, flags}, ctx) => {
     help.push('Container nodes at depth ' + flags.depth + ' may have more layers; re-run with a larger --depth');
   if (summary.counts.beyondLimit > 0)
     help.push('Re-run with a larger --limit or --full to include omitted rows and untruncated text');
-  return {file: file.name, node: id, depth: flags.depth, ...summary.counts, nodes: summary.rows, help};
+  return {file, node: id, depth: flags.depth, ...summary.counts, nodes: summary.rows, help};
 };
