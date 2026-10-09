@@ -7,8 +7,9 @@ import { run as outline } from './commands/outline.ts';
 import { run as inspect } from './commands/inspect.ts';
 import { run as render } from './commands/render.ts';
 import { run as comments } from './commands/comments.ts';
+import { run as assets } from './commands/assets.ts';
 import { run as spec } from './commands/spec.ts';
-export type CommandName = 'home' | 'outline' | 'inspect' | 'render' | 'comments' | 'spec';
+export type CommandName = 'home' | 'outline' | 'inspect' | 'render' | 'comments' | 'spec' | 'assets';
 export type FlagDef =
   | { kind: 'boolean'; description: string }
   | { kind: 'integer' | 'number'; min: number; max: number; default: number; description: string }
@@ -45,6 +46,7 @@ export const DEFS = {
   inspect: {name: 'inspect', summary: 'Layers and text of one node as a depth-first table', positional: {name: 'url-or-key', needsNode: true}, flags: {node, depth, limit, full}, examples: ['figma-axi inspect "https://www.figma.com/design/<key>/<name>?node-id=1-2"', 'figma-axi inspect <key> --node 1-2 --depth 8', 'figma-axi <figma-url-with-node-id>']},
   render: {name: 'render', summary: 'Render one node to a local image', positional: {name: 'url-or-key', needsNode: true}, flags: {node, format: {kind: 'enum', values: ['png', 'jpg', 'svg'], default: 'png', description: 'image format'}, scale: {kind: 'number', min: 0.01, max: 4, default: 1, description: 'image scale (0.01-4)'}, out: {kind: 'string', default: '$TMPDIR/figma-axi', description: 'output directory'}}, examples: ['figma-axi render "https://www.figma.com/design/<key>/<name>?node-id=1-2"', 'figma-axi render <key> --node 1-2 --scale 2']},
   comments: {name: 'comments', summary: 'Open designer threads pinned to a file', positional: {name: 'url-or-key', needsNode: false}, flags: {resolved: {kind: 'boolean', description: 'include resolved threads'}, limit: {...limit, default: 100}, full}, examples: ['figma-axi comments "https://www.figma.com/design/<key>/<name>"', 'figma-axi comments <key> --resolved --full']},
+  assets: {name: 'assets', summary: 'Save original image fills under one node, reusing verified local files', positional: {name: 'url-or-key', needsNode: true}, flags: {node, limit, out: {kind: 'string', default: '$TMPDIR/figma-axi', description: 'output directory'}}, examples: ['figma-axi assets "https://www.figma.com/design/<key>/<name>?node-id=1-2"', 'figma-axi assets <key> --node 1-2 --limit 100']},
   spec: {name: 'spec', summary: 'Design-to-code spec of one node: layout, colours, typography, effects, tokens and component props', positional: {name: 'url-or-key', needsNode: true}, flags: {node, depth, limit}, examples: ['figma-axi spec "https://www.figma.com/design/<key>/<name>?node-id=1-2"', 'figma-axi spec <key> --node 1-2 --depth 8']},
 } as const satisfies {[K in CommandName]: CommandDef<Record<string, FlagDef>>};
 export type HomeDef = typeof DEFS.home;
@@ -52,11 +54,12 @@ export type OutlineDef = typeof DEFS.outline;
 export type InspectDef = typeof DEFS.inspect;
 export type RenderDef = typeof DEFS.render;
 export type CommentsDef = typeof DEFS.comments;
+export type AssetsDef = typeof DEFS.assets;
 export type SpecDef = typeof DEFS.spec;
 export const REGISTRY = {
   home: {def: DEFS.home, run: home}, outline: {def: DEFS.outline, run: outline},
   inspect: {def: DEFS.inspect, run: inspect}, render: {def: DEFS.render, run: render}, comments: {def: DEFS.comments, run: comments},
-  spec: {def: DEFS.spec, run: spec},
+  spec: {def: DEFS.spec, run: spec}, assets: {def: DEFS.assets, run: assets},
 } satisfies {[K in CommandName]: {def: (typeof DEFS)[K]; run: Handler<(typeof DEFS)[K]>}};
 function isCommandName(command: string): command is CommandName {return Object.hasOwn(DEFS, command);}
 export function route(args: Args): {name: CommandName; positional: string | undefined} {

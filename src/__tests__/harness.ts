@@ -9,6 +9,7 @@ export type Reply = {status?: number; headers?: Record<string, string>} & (
   | {bytes: Uint8Array; contentType: string; body?: never}
 );
 export interface Scenario {
+  prepare?: () => Promise<void>;
   argv: string[];
   env?: Env;
   tmpdir?: string;

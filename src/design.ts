@@ -3,7 +3,7 @@ import {AxiError} from './errors.ts';
 import type {Brand} from './ref.ts';
 import {urlForm} from './ref.ts';
 import {sanitize} from './security.ts';
-import type {FacetParser, Walk, NodesEntry} from './summarize.ts';
+import type {FacetParser, Walk, NodesEntry, RawNode} from './summarize.ts';
 export type StyleId = Brand<string, 'StyleId'>;
 export type VariableId = Brand<string, 'VariableId'>;
 export type VariableKey = Brand<string, 'VariableKey'>;
@@ -49,6 +49,24 @@ export type Naming = {status: 'resolved'; lookup: (ref: VariableRef) => Variable
 export type LayerRow = {depth: number; id: string; type: string; name: string} & Record<Column, string | null>;
 export type TokenRow = {label: string; source: 'style' | 'variable'; id: string; value: string | null; fields: string; uses: number; code: string | null};
 export type InstanceRow = {id: string; component: string; variant: string | null; props: string | null};
+function imagePaints(facet: StyleFacet): readonly Extract<Paint, {kind: 'image'}>[] {
+  return [...facet.fills, ...(facet.strokes?.paints ?? [])].filter(p => p.kind === 'image');
+}
+export type ImageUse = {imageRef: ImageRef; layer: string; uses: number};
+export function collectImageFills(root: RawNode<StyleFacet>): readonly ImageUse[] {
+  const refs = new Map<ImageRef, ImageUse>();
+  function visit(node: RawNode<StyleFacet>): void {
+    if (node.visible === false) return;
+    for (const ref of new Set(imagePaints(node.facet).map(p => p.ref))) {
+      const use = refs.get(ref);
+      if (use) use.uses++;
+      else refs.set(ref, {imageRef: ref, layer: urlForm(node.id), uses: 1});
+    }
+    for (const child of node.children) visit(child);
+  }
+  visit(root);
+  return [...refs.values()];
+}
 export type DesignSpec = {layers: readonly LayerRow[]; tokens: readonly TokenRow[]; instances: readonly InstanceRow[]; imageFills: number};
 function bad(): never {throw new AxiError({code: 'bad_response'}, 'Invalid design response', ['Check the Figma API response']);}
 function record(raw: unknown): raw is Record<string, unknown> {return raw !== null && typeof raw === 'object' && !Array.isArray(raw);}
@@ -368,6 +386,7 @@ export function buildSpec(walk: Walk<StyleFacet>, catalog: Catalog, naming: Nami
   const imageRefs = new Set<ImageRef>();
   for (const {node, depth} of walk.visits) {
     const f = node.facet;
+    for (const paint of imagePaints(f)) imageRefs.add(paint.ref);
     const used = new Set<Binding>();
     const variableTokens = (target: string): string => {
       const parts: string[] = [];
@@ -406,7 +425,6 @@ export function buildSpec(walk: Walk<StyleFacet>, catalog: Catalog, naming: Nami
       const value = paints.length === 1 && paints[0]?.kind === 'solid' ? paints[0].color : base || null;
       const style = styleToken(slot, value);
       const parts = paints.map((p, index) => {
-        if (p.kind === 'image') imageRefs.add(p.ref);
         return paintValue(p) + (index === 0 ? style : '') + variableTokens(slot + '.' + index);
       });
       return parts.length ? parts.join(' + ') : style.trim() || null;
