@@ -1,8 +1,9 @@
 import type {GetImagesQueryParams} from '@figma/rest-api-spec';
-import {randomUUID} from 'node:crypto';
+import {randomUUID, createHash} from 'node:crypto';
 import {mkdir, writeFile, rename, rm} from 'node:fs/promises';
 import {dirname, join} from 'node:path';
 import {AxiError} from './errors.ts';
+import type {ImageRef} from './design.ts';
 import type {Brand} from './ref.ts';
 type ImageFormat = Exclude<NonNullable<GetImagesQueryParams['format']>, 'pdf'>;
 export type ImageUrl = Brand<URL, 'ImageUrl'>;
@@ -32,7 +33,7 @@ function matchesFormat(bytes: Uint8Array, format: ImageFormat): boolean {
     default: { const exhaustive: never = format; return exhaustive; }
   }
 }
-export async function fetchImage(url: ImageUrl, fetch: typeof globalThis.fetch, format: ImageFormat): Promise<Uint8Array> {
+async function fetchBytes(url: ImageUrl, fetch: typeof globalThis.fetch, accept: string): Promise<Uint8Array> {
   const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
   const deadline = new Promise<never>((_, reject) => {
@@ -42,7 +43,7 @@ export async function fetchImage(url: ImageUrl, fetch: typeof globalThis.fetch, 
     }, 60000);
   });
   const work = async () => {
-    const response = await fetch(url.href, {headers: {Accept: ACCEPT[format]}, redirect: 'manual', signal: controller.signal});
+    const response = await fetch(url.href, {headers: {Accept: accept}, redirect: 'manual', signal: controller.signal});
     if (response.status >= 300 && response.status < 400)
       throw new AxiError({code: 'security'}, 'Image redirect refused', ['Re-run render to request a direct image URL']);
     if (!response.ok) throw downloadFailure('Image download failed (' + response.status + ')');
@@ -68,7 +69,6 @@ export async function fetchImage(url: ImageUrl, fetch: typeof globalThis.fetch, 
       } finally { reader.releaseLock(); }
     }
     const bytes = Buffer.concat(chunks, size);
-    if (!matchesFormat(bytes, format)) throw downloadFailure('Image bytes do not match the requested format');
     return bytes;
   };
   try { return await Promise.race([work(), deadline]); }
@@ -76,6 +76,29 @@ export async function fetchImage(url: ImageUrl, fetch: typeof globalThis.fetch, 
     if (error instanceof AxiError) throw error;
     throw downloadFailure('Image download failed');
   } finally { clearTimeout(timer); controller.abort(); }
+}
+export async function fetchImage(url: ImageUrl, fetch: typeof globalThis.fetch, format: ImageFormat): Promise<Uint8Array> {
+  const bytes = await fetchBytes(url, fetch, ACCEPT[format]);
+  if (!matchesFormat(bytes, format)) throw downloadFailure('Image bytes do not match the requested format');
+  return bytes;
+}
+export type FillFormat = 'png' | 'jpg' | 'gif' | 'webp';
+export function fillFormat(bytes: Uint8Array): FillFormat {
+  if (matchesFormat(bytes, 'png')) return 'png';
+  if (matchesFormat(bytes, 'jpg')) return 'jpg';
+  const signature = Buffer.from(bytes.subarray(0, 12)).toString('ascii');
+  if (signature.startsWith('GIF87a') || signature.startsWith('GIF89a')) return 'gif';
+  if (signature.startsWith('RIFF') && signature.slice(8, 12) === 'WEBP') return 'webp';
+  throw downloadFailure('Unrecognized image fill format');
+}
+export function matchesImageRef(bytes: Uint8Array, ref: ImageRef): boolean {
+  return createHash('sha1').update(bytes).digest('hex') === ref;
+}
+export async function fetchImageFill(url: ImageUrl, fetch: typeof globalThis.fetch, ref: ImageRef): Promise<{bytes: Uint8Array; format: FillFormat}> {
+  const bytes = await fetchBytes(url, fetch, 'image/*');
+  const format = fillFormat(bytes);
+  if (!matchesImageRef(bytes, ref)) throw downloadFailure('Image fill SHA-1 does not match imageRef');
+  return {bytes, format};
 }
 export async function writeAtomic(path: string, bytes: Uint8Array): Promise<void> {
   const dir = dirname(path);

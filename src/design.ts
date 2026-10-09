@@ -68,6 +68,10 @@ function isStyleId(value: string): value is StyleId {return value.length > 0;}
 function isVariableId(value: string): value is VariableId {return value.length > 0;}
 function isKey(value: string): value is VariableKey {return /^[0-9a-f]{40}$/.test(value);}
 function isImageRef(value: string): value is ImageRef {return /^[0-9a-f]{40}$/.test(value);}
+export function parseImageRef(raw: unknown): ImageRef {
+  if (typeof raw !== 'string' || !isImageRef(raw)) bad();
+  return raw;
+}
 function isHex(value: string): value is Hex {return /^#[0-9A-F]{6}(?:[0-9A-F]{2})?$/.test(value);}
 function variable(raw: unknown): VariableRef {
   const alias = object(raw);
@@ -140,8 +144,7 @@ export const parseStyleFacet: FacetParser<StyleFacet> = (raw, type) => {
           paint = {kind: 'gradient', shape, stops: array(p.gradientStops).map(stop => color(object(stop).color, opacity))}; break;
         }
         case 'IMAGE': {
-          const ref = string(p.gifRef === undefined ? p.imageRef : p.gifRef);
-          if (!isImageRef(ref)) bad();
+          const ref = parseImageRef(p.gifRef === undefined ? p.imageRef : p.gifRef);
           const mode = choice(p.scaleMode, ['FILL', 'FIT', 'TILE', 'STRETCH'], 'FILL');
           paint = {kind: 'image', ref, scaleMode: mode === 'FILL' ? 'fill' : mode === 'FIT' ? 'fit' : mode === 'TILE' ? 'tile' : 'stretch'}; break;
         }
