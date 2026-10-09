@@ -24,6 +24,6 @@ test('render write failure directs the user to a writable output directory', asy
     'https://images.example.test/a': {bytes: png, contentType: 'image/png'},
   });
   assert.equal(result.exit, 1);
-  assert.deepEqual(JSON.parse(result.output), {error: 'Could not write the rendered image', code: 'download_failed',
+  assert.deepEqual(JSON.parse(result.output), {error: 'Could not write the image', code: 'download_failed',
     help: ['Check that --out points at a writable directory']});
 });
