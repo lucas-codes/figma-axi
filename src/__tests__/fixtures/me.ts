@@ -23,7 +23,7 @@ export const goldenCases = {
   }},
   'error-forbidden': {argv: [], routes: {'https://api.figma.com/v1/me': {body: {err: 'Invalid token'}, status: 403}}, exit: 1, model: {
     error: 'Figma refused the request (403)', code: 'forbidden', status: 403, figma: 'Invalid token', help: [
-      'Check FIGMA_TOKEN has not expired and has file_content read scope, and that its account can open this file',
+      'Check FIGMA_TOKEN has the current_user:read scope',
     ],
   }},
 } satisfies Record<string, Scenario>;
