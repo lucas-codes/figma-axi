@@ -29,7 +29,7 @@ test('deterministic path, API-form id, unauthenticated download and overwrite', 
   const result = await run([...argv, '--json'], routes, env, dir);
   const path = join(dir, 'figma-axi/AbC123xyz456/1-2@1x.png');
   assert.equal(result.exit, 0);
-  assert.deepEqual(JSON.parse(result.output), {images: [{node: '1-2', path, format: 'png', bytes: 68}], help: ['Read the image at path; re-run with --scale 2 for finer detail']});
+  assert.deepEqual(JSON.parse(result.output), {images: [{node: '1-2', path, format: 'png', bytes: 68}], help: ['Read the image at path; re-run with --scale 2 for finer detail', 'SVG is for icons and vectors; use `spec` for layout and `assets` for photos']});
   assert.deepEqual(await readFile(path), png);
   assert.equal(result.calls[0]?.url, imageApi);
   assert.deepEqual(Object.fromEntries(new Headers(result.calls[1]?.init?.headers)), {accept: 'image/png'});
@@ -52,7 +52,7 @@ for (const [format, bytes, contentType] of [['jpg', jpg, 'image/jpeg'], ['svg', 
     });
     assert.equal(result.exit, 0);
     const path = join(dir, 'AbC123xyz456/1-2@2x.' + format);
-    assert.deepEqual(JSON.parse(result.output), {images: [{node: '1-2', path, format, bytes: bytes.length}], help: ['Read the image at path; re-run with --scale 2 for finer detail']});
+    assert.deepEqual(JSON.parse(result.output), {images: [{node: '1-2', path, format, bytes: bytes.length}], help: ['Read the image at path; re-run with --scale 2 for finer detail', 'SVG is for icons and vectors; use `spec` for layout and `assets` for photos']});
     assert.deepEqual(await readFile(path), Buffer.from(bytes));
   });
 for (const body of [{err: null, images: {'1:2': null}}, {err: null, images: {}}])

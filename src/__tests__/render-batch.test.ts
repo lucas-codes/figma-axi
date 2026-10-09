@@ -14,18 +14,19 @@ test('batch deduplicates normalized ids in order and saves each image', async t 
     'https://images.example.test/a': {bytes: png, contentType: 'image/png'},
   });
   assert.equal(result.exit, 0);
-  assert.deepEqual(JSON.parse(result.output), {images: ['1-2','1-3','1-4'].map(node => ({node, path: join(dir, 'AbC123xyz456', node + '@1x.png'), format: 'png', bytes: 68})), help: ['Read the image at path; re-run with --scale 2 for finer detail']});
+  assert.deepEqual(JSON.parse(result.output), {images: ['1-2','1-3','1-4'].map(node => ({node, path: join(dir, 'AbC123xyz456', node + '@1x.png'), format: 'png', bytes: 68})), help: ['Read the image at path; re-run with --scale 2 for finer detail', 'SVG is for icons and vectors; use `spec` for layout and `assets` for photos']});
   assert.deepEqual(await readFile(join(dir, 'AbC123xyz456/1-3@1x.png')), png);
   assert.equal(result.calls[0]?.url, api);
   assert.equal(new Headers(result.calls[1]?.init?.headers).has('X-Figma-Token'), false);
 });
-test('one null in batch refuses all downloads before writing', async t => {
+for (const third of [null, 'https://images.example.test/a'])
+ test('null in batch refuses all downloads before writing: third=' + third, async t => {
   const dir = await mkdtemp(join(tmpdir(), 'batch-'));
   t.after(() => rm(dir, {recursive: true, force: true}));
   const result = await run(['render', 'AbC123xyz456', '--node', '1-2,1-3,1-4', '--out', dir, '--json'], {
-    [api]: {body: {images: {'1:2': 'https://images.example.test/a', '1:3': null, '1:4': null}}},
+    [api]: {body: {images: {'1:2': 'https://images.example.test/a', '1:3': null, '1:4': third}}},
   }, env);
-  assert.deepEqual(JSON.parse(result.output), {error: 'Figma could not render node 1-3, 1-4', code: 'render_failed', help: ['Check the node can be rendered in Figma']});
+  assert.deepEqual(JSON.parse(result.output), {error: third === null ? 'Figma could not render node 1-3, 1-4' : 'Figma could not render node 1-3', code: 'render_failed', help: ['Check the node can be rendered in Figma']});
   assert.equal(result.exit, 1);
   assert.deepEqual(await readdir(dir), []);
   assert.equal(result.calls.length, 1);

@@ -29,18 +29,46 @@ step home
 if ! printf '%s\n' "$output" | grep -q '^auth: ok'; then failed=1; fi
 step outline outline "$1"
 step inspect "$2"
-step spec spec "$2"
-step render render "$2" --json --out "$work"
+step spec spec "$2" --json
 if [ "$code" -eq 0 ]; then
-  # Read the returned path and inspect bytes without retaining the API response.
-  signature=$(printf '%s\n' "$output" | node --input-type=module -e '
+  nodes=$(printf '%s\n' "$output" | node --input-type=module -e '
     import {readFileSync} from "node:fs";
-    const {path} = JSON.parse(readFileSync(0, "utf8"));
-    const bytes = readFileSync(path).subarray(0, 8);
-    process.stdout.write(bytes.equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) ? "ok" : "invalid");
+    const {node, layers} = JSON.parse(readFileSync(0, "utf8"));
+    const child = layers.find(layer => layer.depth === 1);
+    if (!child) throw new Error("Smoke node needs a visible child for batch render");
+    process.stdout.write(node + "," + child.id);
   ' 2>&1)
-  if [ "$signature" != ok ]; then
-    printf '%s\n' 'render: PNG signature check failed'
+  if [ "$?" -eq 0 ]; then
+    step render render "$2" --node "$nodes" --json --out "$work"
+    if [ "$code" -eq 0 ]; then
+      signature=$(printf '%s\n' "$output" | node --input-type=module -e '
+        import {readFileSync} from "node:fs";
+        const {images} = JSON.parse(readFileSync(0, "utf8"));
+        const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+        process.stdout.write(images.length === 2 && images.every(image =>
+          readFileSync(image.path).subarray(0, 8).equals(png)) ? "ok" : "invalid");
+      ' 2>&1)
+      if [ "$signature" != ok ]; then
+        printf '%s\n' 'render: batch PNG signature check failed'
+        failed=1
+      fi
+    fi
+  else
+    printf '%s\n' 'render: could not derive two node ids from spec'
+    failed=1
+  fi
+fi
+step assets assets "$2" --json --out "$work"
+if [ "$code" -eq 0 ]; then
+  integrity=$(printf '%s\n' "$output" | node --input-type=module -e '
+    import {readFileSync} from "node:fs";
+    import {createHash} from "node:crypto";
+    const {images} = JSON.parse(readFileSync(0, "utf8"));
+    process.stdout.write(images.length > 0 && images.every(image =>
+      image.status !== "missing" && createHash("sha1").update(readFileSync(image.path)).digest("hex") === image.imageRef) ? "ok" : "invalid");
+  ' 2>&1)
+  if [ "$integrity" != ok ]; then
+    printf '%s\n' 'assets: missing rows or SHA-1 check failed'
     failed=1
   fi
 fi
