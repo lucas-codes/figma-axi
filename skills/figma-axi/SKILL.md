@@ -1,6 +1,6 @@
 ---
 name: figma-axi
-description: Read Figma outlines, layers and text, design-to-code styling and token/component data, rendered images, comments, and current-user setup through the figma-axi CLI.
+description: Read Figma outlines, layers and text, design-to-code styling and token/component data, rendered images and original image fills, comments, and current-user setup through the figma-axi CLI.
 ---
 
 # figma-axi
@@ -37,10 +37,12 @@ Layers and text of one node as a depth-first table. Flags: `--node`, `--depth`, 
 
 ## `render`
 
-Render one node to a local image. Flags: `--node`, `--format`, `--scale`, `--out`, `--json`.
+Render one or several nodes to local images. Flags: `--node`, `--format`, `--scale`, `--out`, `--json`.
 
 - `figma-axi render "https://www.figma.com/design/<key>/<name>?node-id=1-2"`
-- `figma-axi render <key> --node 1-2 --scale 2`
+- `figma-axi render <key> --node 1-2,1-3 --scale 2`
+
+SVG is for icons and vectors; use `spec` for layout and `assets` for photos
 
 ## `comments`
 
@@ -55,6 +57,8 @@ Save original image fills under one node, reusing verified local files. Flags: `
 
 - `figma-axi assets "https://www.figma.com/design/<key>/<name>?node-id=1-2"`
 - `figma-axi assets <key> --node 1-2 --limit 100`
+
+Save visible image fills across the full subtree, including instance internals. Duplicate refs share one row; uses counts distinct layers and layer is the first layer id. Files live at <out>/<fileKey>/fills/<imageRef>.<ext>; format comes from PNG/JPEG/GIF/WebP magic bytes and SHA-1 must match imageRef before writing. Verified existing files are cached without downloading; missing map entries are missing rows with null path/format/bytes. Increase --limit when beyondLimit is nonzero. Downloads are sequential and stop at the first failure; re-run to reuse completed files.
 
 ## `spec`
 
@@ -76,7 +80,7 @@ Cells use this grammar; references are `<label>`:
 
 Token rows carry the full alias id or style key in `id`, evaluated `value`, bound `fields`, distinct layer `uses`, and Figma WEB `code` when supplied. Distinct evaluated values join with ` / `; group aliases without a precise evaluated value stay null. Style names come from the node response. Variable names are probed once only when selected rows have bindings: variableNames is resolved, partial (unmatched count in attention), unavailable (variables-endpoint 403), or none-bound (no lookup). Unavailable/unmatched names use var.<key prefix>, starting at 8 hex and lengthened for collisions; local aliases use var.<URL-form id>. Evaluated values survive a 403; names require file_variables:read on an eligible Enterprise org. Other failures propagate. There is no variable flag or cache.
 
-Variants come from VARIANT properties, not component names. INSTANCE_SWAP resolves through the node catalog when known, otherwise keeps its id. Property-name #id suffixes are dropped only without collisions. Original image-fill downloads are a separate assets delivery; use render for the composed frame.
+Variants come from VARIANT properties, not component names. INSTANCE_SWAP resolves through the node catalog when known, otherwise keeps its id. Property-name #id suffixes are dropped only without collisions. Use assets for original image fills and render for the composed frame.
 
 ## Failures and trust
 
