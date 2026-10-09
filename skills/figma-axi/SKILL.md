@@ -7,7 +7,7 @@ description: Read Figma file outlines, node layers and text, rendered images, de
 
 Read-only Figma REST for agents: frames, layer text, rendered images and comments.
 
-Run `figma-axi` first to check authentication. If unavailable, create a personal access token in Figma Settings then Security with file_content:read, file_comments:read and current_user:read scopes; export it as `FIGMA_TOKEN`. Token values are never printed.
+Run `figma-axi` first to check authentication. If unavailable, create a personal access token in Figma Settings then Security with required file_content:read and file_comments:read scopes; current_user:read is optional to show the account; export it as `FIGMA_TOKEN`. Token values are never printed.
 
 Without a global install, run each command as `npx -y @lucaslim/figma-axi@0.1.0 <args>`. Never use the unscoped `figma-axi` package; it is unrelated. <!-- x-release-please-version -->
 
