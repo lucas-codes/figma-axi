@@ -10,6 +10,13 @@ export type Operation =
   | {op: 'getFileNodes'; fileKey: FileKey; query: Required<Pick<GetFileNodesQueryParams, 'depth'>> & {ids: NodeId}}
   | {op: 'getImages'; fileKey: FileKey; query: Required<Pick<GetImagesQueryParams, 'scale'>> & {ids: NodeId; format: ImageFormat}}
   | {op: 'getComments'; fileKey: FileKey; query: Required<GetCommentsQueryParams>};
+const SCOPE = {
+  getMe: 'current_user:read',
+  getFile: 'file_content:read',
+  getFileNodes: 'file_content:read',
+  getImages: 'file_content:read',
+  getComments: 'file_comments:read',
+} as const satisfies Record<Operation['op'], string>;
 export type FigmaGet = (op: Operation) => Promise<unknown>;
 export function operationUrl(op: Operation): URL {
   let path: string;
@@ -83,8 +90,16 @@ export async function figmaGet(op: Operation, rt: {env: Env; fetch: typeof globa
     if (!response.ok) {
       const code = response.status === 400 ? 'bad_request' : response.status === 401 ? 'unauthorized' : response.status === 403 ? 'forbidden' : response.status === 404 ? 'not_found' : 'http_error';
       const figma = data && typeof data === 'object' && 'err' in data && typeof data.err === 'string' ? sanitize(data.err).slice(0, 200) : null;
-      throw new AxiError({code, status: response.status, figma}, 'Figma refused the request (' + response.status + ')',
-        ['Check FIGMA_TOKEN has not expired and has file_content read scope, and that its account can open this file']);
+      let help: string;
+      switch (response.status) {
+        case 401: help = 'Check FIGMA_TOKEN is a valid, unexpired personal access token'; break;
+        case 403: help = 'Check FIGMA_TOKEN has the ' + SCOPE[op.op] + ' scope' +
+          (op.op === 'getMe' ? '' : ' and that its account can open this file'); break;
+        case 404: help = "Check the file key in the URL; the token's account may not be able to see this file"; break;
+        case 400: help = 'Check the URL, node id and flags'; break;
+        default: help = 'Figma returned HTTP ' + response.status + '; retry later';
+      }
+      throw new AxiError({code, status: response.status, figma}, 'Figma refused the request (' + response.status + ')', [help]);
     }
     if (!json) throw new AxiError({code: 'bad_response'}, 'Expected JSON response', ['Check the Figma API response']);
     return data;
