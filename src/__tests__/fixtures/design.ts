@@ -50,7 +50,7 @@ export const unavailableSpec = {
     {label: 'var.becc5963', source: 'variable', id: colorId, value: '#FFFFFF', fields: 'fill', uses: 1, code: null},
     {label: 'var.20293d10', source: 'variable', id: radiusId, value: '12', fields: 'radius', uses: 1, code: null},
   ],
-  instances: [{id: '1-3', component: 'Dialog/Header', variant: 'Align=Left', props: 'Dismiss=false;Icon=Align=Left'}],
+  instances: [{id: '1-3', component: 'Dialog/Header', variant: 'Align=Left', props: 'Dismiss=false;Icon=Dialog/Header'}],
   imageFills: 1,
 };
 const nodesUrl = 'https://api.figma.com/v1/files/AbC123xyz456/nodes?ids=1%3A2&depth=5';
