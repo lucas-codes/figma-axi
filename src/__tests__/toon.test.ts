@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync, readdirSync} from 'node:fs';
+import {readdirSync} from 'node:fs';
 import {encode, decode} from '@toon-format/toon';
-import {run, type Scenario} from './harness.ts';
+import {readGolden, run, type Scenario} from './harness.ts';
 const fixtures = new URL('./fixtures/', import.meta.url);
 const scenarios: Record<string, Scenario> = {};
 // Each command owns its fixture module and publishes its golden invocation there.
@@ -14,7 +14,7 @@ for (const file of readdirSync(new URL('./goldens/', import.meta.url)).filter(fi
   test('official TOON round trip and identical JSON model: ' + file, async () => {
     const scenario = scenarios[file.slice(0, -4)];
     assert.ok(scenario, 'Fixture must export goldenCases for ' + file);
-    const golden = readFileSync(new URL('./goldens/' + file, import.meta.url), 'utf8');
+    const golden = readGolden(file.slice(0, -4));
     await scenario.prepare?.();
     const json = await run([...scenario.argv, '--json'], scenario.routes, scenario.env, scenario.tmpdir);
     assert.equal(json.exit, scenario.exit);

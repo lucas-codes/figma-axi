@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {decode} from '@toon-format/toon';
-import {run} from './harness.ts';
+import {packageVersion, run} from './harness.ts';
 for (const [command, expectedFlags] of [
   ['home', ['--json']],
   ['outline', ['--limit', '--json']],
@@ -29,5 +29,5 @@ test('root help describes commands, setup and version', async () => {
   assert.deepEqual(model.commands.map(row => row.command), ['home', 'outline', 'inspect', 'render', 'comments', 'assets', 'spec']);
   const version = await run(['-v'], {}, {});
   assert.equal(version.exit, 0);
-  assert.equal(version.output, 'version: 0.1.0\n');
+  assert.equal(version.output, 'version: ' + packageVersion + '\n');
 });

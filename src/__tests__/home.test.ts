@@ -1,8 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
 import {main} from '../index.ts';
-import {run} from './harness.ts';
+import {readGolden, run} from './harness.ts';
 import {goldenCases} from './fixtures/me.ts';
 test('home without a token explains setup and exits successfully', async () => {
   let output = '';
@@ -14,7 +13,7 @@ test('home without a token explains setup and exits successfully', async () => {
 for (const [name, scenario] of Object.entries(goldenCases)) test('literal golden: ' + name, async () => {
   const result = await run(scenario.argv, 'routes' in scenario ? scenario.routes : {}, 'env' in scenario ? scenario.env : undefined);
   assert.equal(result.exit, scenario.exit);
-  assert.equal(result.output, readFileSync(new URL('./goldens/' + name + '.txt', import.meta.url), 'utf8') + '\n');
+  assert.equal(result.output, readGolden(name) + '\n');
   const json = await run([...scenario.argv, '--json'], 'routes' in scenario ? scenario.routes : {}, 'env' in scenario ? scenario.env : undefined);
   assert.equal(json.exit, scenario.exit);
   assert.deepEqual(JSON.parse(json.output), scenario.model);

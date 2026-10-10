@@ -1,10 +1,10 @@
 import type {GetMeResponse, ErrorResponsePayloadWithErrorBoolean} from '@figma/rest-api-spec';
-import type {DeepPartial, Scenario} from '../harness.ts';
+import {packageVersion, type DeepPartial, type Scenario} from '../harness.ts';
 export const me = {id: 'lucas', handle: 'lucas', email: 'lucas@example.com'} satisfies DeepPartial<GetMeResponse>;
 const base = {
   bin: '/repo/node_modules/.bin/figma-axi',
   description: 'Read-only Figma REST for agents: frames, layer text, rendered images and comments.',
-  version: '0.1.0',
+  version: packageVersion,
 };
 export const goldenCases = {
   home: {argv: [], routes: {'https://api.figma.com/v1/me': {body: me}}, exit: 0, model: {...base, auth: 'ok (lucas <lucas@example.com>)', help: [

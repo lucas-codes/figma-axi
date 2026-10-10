@@ -1,9 +1,15 @@
+import {readFileSync} from 'node:fs';
 import {main} from '../index.ts';
 import type {Env} from '../security.ts';
 import type {GetFileNodesResponse} from '@figma/rest-api-spec';
 export type DeepPartial<T> = T extends readonly (infer V)[] ? DeepPartial<V>[] : T extends object ? {[K in keyof T]?: DeepPartial<T[K]>} : T;
 export const nodesFixture = {nodes: {'1:2': {document: {id: '1:2', type: 'FRAME', name: 'Cart desktop'}}}} satisfies DeepPartial<GetFileNodesResponse>;
 export const env = {FIGMA_TOKEN: 'figd_DUMMY_SECRET'};
+// Read from package.json, not VERSION, so a release that bumps one without the other fails here.
+export const packageVersion: string = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version;
+export function readGolden(name: string): string {
+  return readFileSync(new URL('./goldens/' + name + '.txt', import.meta.url), 'utf8').replaceAll('<version>', packageVersion);
+}
 export type Reply = {status?: number; headers?: Record<string, string>} & (
   | {body: unknown; bytes?: never; contentType?: never}
   | {bytes: Uint8Array; contentType: string; body?: never}
