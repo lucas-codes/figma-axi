@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {run, type Reply} from './harness.ts';
 import {goldenCases, designFrame, variableNames, unboundFrame, colorId} from './fixtures/design.ts';
+import {slotFrame} from './fixtures/slots.ts';
 const nodesUrl = 'https://api.figma.com/v1/files/AbC123xyz456/nodes?ids=1%3A2&depth=5';
 const variablesUrl = 'https://api.figma.com/v1/files/AbC123xyz456/variables/local';
 const argv = ['spec', 'AbC123xyz456', '--node', '1-2', '--json'];
@@ -115,4 +116,23 @@ test('new API fields cannot leak a token into spec stdout', async () => {
   const success = await run(argv, routes);
   assert.equal(success.exit, 0);
   assert.equal(JSON.parse(success.output).variableNames, 'resolved');
+});
+test('spec lists slot layers and their styling inside collapsed instances', async () => {
+  const result = await run(argv, {[nodesUrl]: {body: slotFrame}});
+  assert.equal(result.exit, 0);
+  const model = JSON.parse(result.output);
+  assert.deepEqual({hidden: model.hidden, shapesOmitted: model.shapesOmitted, beyondLimit: model.beyondLimit, instanceLayersSkipped: model.instanceLayersSkipped},
+    {hidden: 1, shapesOmitted: 1, beyondLimit: 0, instanceLayersSkipped: 3});
+  assert.deepEqual(model.layers.map(({depth, id, type, name, text}: {depth: number; id: string; type: string; name: string; text: string | null}) => [depth, id, type, name, text]), [
+    [0, '1-2', 'FRAME', 'Overview', null],
+    [1, '1-3', 'INSTANCE', 'Tile', null],
+    [2, 'I1-3;30-4', 'SLOT', 'Body', null],
+    [3, 'I1-3;30-4;1-10', 'FRAME', 'Content', null],
+    [4, 'I1-3;30-4;1-11', 'TEXT', 'Value', 'Inter 600 18/24'],
+    [1, '1-4', 'INSTANCE', 'Tile', null],
+    [3, 'I1-4;30-4', 'SLOT', 'Body', null],
+    [4, 'I1-4;30-4;1-20', 'TEXT', 'Value', null],
+  ]);
+  assert.deepEqual(model.instances, [{id: '1-3', component: 'Report/Tile', variant: null, props: null}, {id: '1-4', component: 'Report/Tile', variant: null, props: null}]);
+  assert.deepEqual(result.calls.map(c => c.url), [nodesUrl]);
 });

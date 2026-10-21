@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {run} from './harness.ts';
 import {frame, inspectModel, goldenCases} from './fixtures/nodes-frame.ts';
+import {slotFrame} from './fixtures/slots.ts';
 const url = (depth = 5) => 'https://api.figma.com/v1/files/AbC123xyz456/nodes?ids=1%3A2&depth=' + depth;
 const argv = ['inspect', 'AbC123xyz456', '--node', '1-2'];
 test('bare URL inspect stdout is literal TOON golden; JSON identical; API ids are colon form', async () => {
@@ -71,3 +72,33 @@ for (const body of [{}, {...frame, name: 4}, {name: 'File', nodes: {'1:2': {docu
     assert.equal(result.exit, 1);
     assert.equal(JSON.parse(result.output).code, 'bad_response');
   });
+const slotRows = [
+  {depth: 0, id: '1-2', type: 'FRAME', name: 'Overview', size: null, content: null},
+  {depth: 1, id: '1-3', type: 'INSTANCE', name: 'Tile', size: null, content: 'Report/Tile | Visits'},
+  {depth: 2, id: 'I1-3;30-4', type: 'SLOT', name: 'Body', size: null, content: null},
+  {depth: 3, id: 'I1-3;30-4;1-10', type: 'FRAME', name: 'Content', size: null, content: null},
+  {depth: 4, id: 'I1-3;30-4;1-11', type: 'TEXT', name: 'Value', size: null, content: '1,204'},
+  {depth: 1, id: '1-4', type: 'INSTANCE', name: 'Tile', size: null, content: 'Report/Tile | Orders'},
+  {depth: 3, id: 'I1-4;30-4', type: 'SLOT', name: 'Body', size: null, content: null},
+  {depth: 4, id: 'I1-4;30-4;1-20', type: 'TEXT', name: 'Value', size: null, content: '87'},
+];
+test('collapsed instances list their slot content while other internals stay collapsed', async () => {
+  const result = await run([...argv, '--json'], {[url()]: {body: slotFrame}});
+  assert.equal(result.exit, 0);
+  assert.deepEqual(JSON.parse(result.output), {file: 'Dashboards', node: '1-2', depth: 5, hidden: 1, shapesOmitted: 1, beyondLimit: 0, textsTruncated: 0,
+    nodes: slotRows, help: ['Run `figma-axi render AbC123xyz456 --node 1-2` to see this frame']});
+});
+test('slot rows cut by --limit are counted in beyondLimit, even inside an instance past the limit', async () => {
+  for (let limit = 1; limit <= slotRows.length; limit++) {
+    const model = JSON.parse((await run([...argv, '--limit', String(limit), '--json'], {[url()]: {body: slotFrame}})).output);
+    assert.deepEqual(model.nodes, slotRows.slice(0, limit));
+    assert.equal(model.beyondLimit, slotRows.length - limit);
+  }
+});
+test('slots at the depth bound show and hint at more layers; deeper slots are cut', async () => {
+  const result = await run([...argv, '--depth', '2', '--json'], {[url(2)]: {body: slotFrame}});
+  assert.equal(result.exit, 0);
+  assert.deepEqual(JSON.parse(result.output), {file: 'Dashboards', node: '1-2', depth: 2, hidden: 0, shapesOmitted: 1, beyondLimit: 0, textsTruncated: 0,
+    nodes: [slotRows[0], slotRows[1], slotRows[2], slotRows[5]],
+    help: ['Run `figma-axi render AbC123xyz456 --node 1-2` to see this frame', 'Container nodes at depth 2 may have more layers; re-run with a larger --depth']});
+});
