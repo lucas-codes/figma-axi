@@ -7,7 +7,7 @@ export function renderSkill(): string {
     const flags = [...Object.keys(def.flags).map(flag => '`--' + flag + '`'), '`--json`'].join(', ');
     const guide = def.name === 'spec' ? [
       '',
-      'Read `layers` for evaluated styling, `tokens` for identities and names, and `instances` for component family, VARIANT properties and other props. Drill into a collapsed instance with `spec --node <id>`; increase --depth or --limit for omitted layers. Counts disclose hidden layers, omitted shapes, instance internals and image fills.',
+      'Read `layers` for evaluated styling, `tokens` for identities and names, and `instances` for component family, VARIANT properties and other props. A collapsed instance still lists its SLOT layers and their content as rows. Drill into its other internals with `spec --node <id>`; increase --depth or --limit for omitted layers. Counts disclose hidden layers, omitted shapes, instance internals and image fills.',
       '',
       'Cells use this grammar; references are `<label>`:',
       '- size: `w x h` without spaces, optional `fixed|hug|fill/fixed|hug|fill` when both sizing axes are supplied, optional `abs`.',

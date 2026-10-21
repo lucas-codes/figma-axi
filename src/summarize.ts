@@ -4,12 +4,13 @@ import type {NodeId, NodeRef} from './ref.ts';
 import {urlForm} from './ref.ts';
 import {sanitize} from './security.ts';
 
-export type NodeClass = 'container' | 'text' | 'instance' | 'shape' | 'leaf';
-export const NODE_CLASS: Record<Node['type'], NodeClass> = {
+export type NodeClass = 'container' | 'slot' | 'text' | 'instance' | 'shape' | 'leaf';
+// @figma/rest-api-spec does not list SLOT yet, but the REST API returns it.
+export const NODE_CLASS: Record<Node['type'] | 'SLOT', NodeClass> = {
   DOCUMENT: 'container', CANVAS: 'container', FRAME: 'container', GROUP: 'container',
   SECTION: 'container', COMPONENT: 'container', COMPONENT_SET: 'container',
   TABLE: 'container', TRANSFORM_GROUP: 'container', WIDGET: 'container',
-  TEXT: 'text', INSTANCE: 'instance',
+  SLOT: 'slot', TEXT: 'text', INSTANCE: 'instance',
   VECTOR: 'shape', BOOLEAN_OPERATION: 'shape', ELLIPSE: 'shape',
   LINE: 'shape', STAR: 'shape', REGULAR_POLYGON: 'shape',
   RECTANGLE: 'leaf', SLICE: 'leaf', EMBED: 'leaf', LINK_UNFURL: 'leaf',
@@ -41,7 +42,7 @@ function record(raw: unknown): raw is Record<string, unknown> {
   return raw !== null && typeof raw === 'object' && !Array.isArray(raw);
 }
 function nodeId(id: string): id is NodeId { return /^I?\d+:\d+(;I?\d+:\d+)*$/.test(id); }
-function knownType(type: string): type is Node['type'] { return Object.hasOwn(NODE_CLASS, type); }
+function knownType(type: string): type is keyof typeof NODE_CLASS { return Object.hasOwn(NODE_CLASS, type); }
 
 export type FacetParser<F> = (raw: Readonly<Record<string, unknown>>, type: string) => F;
 export function parseNodeTree(raw: unknown): RawNode<null>;
@@ -108,11 +109,14 @@ export function walkLayers<F>(root: RawNode<F>, opts: {maxDepth: number; limit: 
     if (node.cls === 'shape') { counts.shapesOmitted++; return true; }
     return false;
   }
-  function skipped(node: RawNode<F>, depth: number): void {
-    if (depth > opts.maxDepth || omitted(node)) return;
-    counts.instanceLayersSkipped++;
+  // Slot content is per-instance design, so it walks as ordinary layers even when the instance row is past the limit.
+  function skipped(node: RawNode<F>, depth: number, shown: boolean): void {
+    if (depth > opts.maxDepth) return;
+    if (node.cls === 'slot') return visit(node, depth);
+    if (shown ? omitted(node) : node.visible === false) return;
+    if (shown) counts.instanceLayersSkipped++;
     if (node.cls === 'container' || node.cls === 'instance')
-      for (const child of node.children) skipped(child, depth + 1);
+      for (const child of node.children) skipped(child, depth + 1, shown);
   }
   function visit(node: RawNode<F>, depth: number): void {
     if (depth > opts.maxDepth || omitted(node)) return;
@@ -120,11 +124,11 @@ export function walkLayers<F>(root: RawNode<F>, opts: {maxDepth: number; limit: 
     const included = opts.limit === null || visits.length < opts.limit;
     if (included) {
       visits.push({node, depth, collapsed});
-      if ((node.cls === 'container' || (node.cls === 'instance' && !collapsed)) && depth === opts.maxDepth)
+      if ((node.cls === 'container' || node.cls === 'slot' || (node.cls === 'instance' && !collapsed)) && depth === opts.maxDepth)
         depthCutPossible = true;
-      if (collapsed) for (const child of node.children) skipped(child, depth + 1);
     } else counts.beyondLimit++;
-    if (!collapsed && (node.cls === 'container' || node.cls === 'instance'))
+    if (collapsed) for (const child of node.children) skipped(child, depth + 1, included);
+    else if (node.cls === 'container' || node.cls === 'slot' || node.cls === 'instance')
       for (const child of node.children) visit(child, depth + 1);
   }
   if (root.type === 'DOCUMENT') {

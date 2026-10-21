@@ -142,7 +142,8 @@ help[2]: Run `figma-axi inspect AbC123xyz456 --node 1-2` for a frame's layers an
 
 `figma-axi inspect AbC123xyz456 --node 1-2` (or the equivalent bare URL) returns
 a pruned depth-first table. Text layers retain their characters; non-root
-instances collapse to the main component name and visible descendant text.
+instances collapse to the main component name and visible descendant text,
+except SLOT layers, which stay rows with their content listed beneath them.
 
 ```
 file: Checkout redesign
