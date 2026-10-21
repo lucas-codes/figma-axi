@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.2](https://github.com/lucas-codes/figma-axi/compare/v0.1.1...v0.1.2) (2026-10-21)
+
+
+### Bug Fixes
+
+* **inspect:** walk SLOT content, including inside collapsed instances ([#8](https://github.com/lucas-codes/figma-axi/issues/8)) ([d474055](https://github.com/lucas-codes/figma-axi/commit/d47405511c6e9df66ff0dacaa83843569c001f42))
+* **spec:** accept SLOT component properties ([#7](https://github.com/lucas-codes/figma-axi/issues/7)) ([77443ea](https://github.com/lucas-codes/figma-axi/commit/77443ea52ee672cb98f5b1971671aa787d9e6a86))
+
 ## [0.1.1](https://github.com/lucas-codes/figma-axi/compare/v0.1.0...v0.1.1) (2026-10-13)
 
 
