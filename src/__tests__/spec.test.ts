@@ -96,6 +96,19 @@ test('image count deduplicates refs across all visible subtree nodes, even beyon
   assert.equal(JSON.parse(cut.output).imageFills, 0);
   assert.deepEqual(cut.calls.map(c => c.url), [nodesUrl]);
 });
+test('slot properties list with a null value because their guid is not a node id', async () => {
+  const body = {name: 'Product', nodes: {'1:2': {
+    components: {'21:3': {name: 'Size=Lg', componentSetId: '21:1'}, '21:4': {name: 'chart'}}, componentSets: {'21:1': {name: 'Card'}},
+    document: {id: '1:2', type: 'INSTANCE', name: 'Card', componentId: '21:3', componentProperties: {
+      Size: {type: 'VARIANT', value: 'Lg'}, 'Title#10:1': {type: 'TEXT', value: 'Weekly'}, 'Divider#10:2': {type: 'BOOLEAN', value: true},
+      'Icon#10:3': {type: 'INSTANCE_SWAP', value: '21:4', preferredValues: []},
+      'Body#10:9': {type: 'SLOT', value: {guid: {sessionID: 1, localID: 9}}, preferredValues: []},
+    }, children: [{id: 'I1:2;10:4', type: 'SLOT', name: 'Body', children: [{id: 'I1:2;10:4;1:10', type: 'FRAME', name: 'Content'}]}]},
+  }}};
+  const result = await run(argv, {[nodesUrl]: {body}});
+  assert.equal(result.exit, 0);
+  assert.deepEqual(JSON.parse(result.output).instances, [{id: '1-2', component: 'Card', variant: 'Size=Lg', props: 'Title=Weekly;Divider=true;Icon=chart;Body=null'}]);
+});
 test('null requested node reports node_not_found', async () => {
   const result = await run(argv, {[nodesUrl]: {body: {name: 'Product', nodes: {'1:2': null}}}});
   assert.equal(result.exit, 1);

@@ -80,7 +80,7 @@ Cells use this grammar; references are `<label>`:
 
 Token rows carry the full alias id or style key in `id`, evaluated `value`, bound `fields`, distinct layer `uses`, and Figma WEB `code` when supplied. Distinct evaluated values join with ` / `; group aliases without a precise evaluated value stay null. Style names come from the node response. Variable names are probed once only when selected rows have bindings: variableNames is resolved, partial (unmatched count in attention), unavailable (variables-endpoint 403), or none-bound (no lookup). Unavailable/unmatched names use var.<key prefix>, starting at 8 hex and lengthened for collisions; local aliases use var.<URL-form id>. Evaluated values survive a 403; names require file_variables:read on an eligible Enterprise org. Other failures propagate. There is no variable flag or cache.
 
-Variants come from VARIANT properties, not component names. INSTANCE_SWAP resolves through the node catalog when known, otherwise keeps its id. Property-name #id suffixes are dropped only without collisions. Use assets for original image fills and render for the composed frame.
+Variants come from VARIANT properties, not component names. INSTANCE_SWAP resolves through the node catalog when known, otherwise keeps its id. SLOT prints `name=null` because its REST value is an opaque reference, not a node id; its content is the SLOT layer of the same name. Property-name #id suffixes are dropped only without collisions. Use assets for original image fills and render for the composed frame.
 
 ## Failures and trust
 
