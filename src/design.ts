@@ -33,7 +33,7 @@ export type Sizing = 'fixed' | 'hug' | 'fill';
 type Quad = readonly [number, number, number, number];
 export type AutoLayout = {direction: 'row' | 'col' | 'grid'; gap: number; pad: Quad; main: 'start' | 'center' | 'end' | 'between'; cross: 'start' | 'center' | 'end' | 'baseline' | 'stretch'; wrap: boolean};
 export type Typography = {family: string; weight: number; size: number; lineHeightPx: number | null; letterSpacing: number; align: 'left' | 'center' | 'right' | 'justified'; textCase: 'upper' | 'lower' | 'title' | null; decoration: 'underline' | 'strike' | null; mixed: boolean};
-export type InstanceProp = {name: string; type: ComponentPropertyType; value: string | boolean};
+export type InstanceProp = {name: string; type: ComponentPropertyType | 'SLOT'; value: string | boolean | null};
 type StyleSlot = 'fill' | 'stroke' | 'effect' | 'text' | 'grid';
 export type StyleFacet = {
   size: {w: number; h: number} | null; sizing: {h: Sizing; v: Sizing} | null; absolute: boolean;
@@ -283,8 +283,8 @@ export const parseStyleFacet: FacetParser<StyleFacet> = (raw, type) => {
   const props: InstanceProp[] = [];
   if (raw.componentProperties !== undefined) for (const [name, item] of Object.entries(object(raw.componentProperties))) {
     const p = object(item);
-    const kind = choice(p.type, ['BOOLEAN', 'INSTANCE_SWAP', 'TEXT', 'VARIANT']);
-    const value = kind === 'BOOLEAN' ? boolean(p.value, false) : string(p.value);
+    const kind = choice(p.type, ['BOOLEAN', 'INSTANCE_SWAP', 'TEXT', 'VARIANT', 'SLOT']);
+    const value = kind === 'BOOLEAN' ? boolean(p.value, false) : kind === 'SLOT' ? null : string(p.value);
     if (p.value === undefined) bad();
     props.push({name: sanitize(name), type: kind, value});
   }
