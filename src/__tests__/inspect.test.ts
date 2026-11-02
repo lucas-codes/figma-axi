@@ -4,8 +4,18 @@ import {readFileSync} from 'node:fs';
 import {run} from './harness.ts';
 import {frame, inspectModel, goldenCases} from './fixtures/nodes-frame.ts';
 import {slotFrame} from './fixtures/slots.ts';
+import {goldenCases as restSlotCases} from './fixtures/market-trade-value.ts';
 const url = (depth = 5) => 'https://api.figma.com/v1/files/AbC123xyz456/nodes?ids=1%3A2&depth=' + depth;
 const argv = ['inspect', 'AbC123xyz456', '--node', '1-2'];
+test('captured REST card inspect includes nested slot content in TOON and JSON', async () => {
+  const scenario = restSlotCases['inspect-rest-slot-card'];
+  const toon = await run(scenario.argv, scenario.routes);
+  assert.equal(toon.exit, 0, toon.output);
+  assert.equal(toon.output, readFileSync(new URL('./goldens/inspect-rest-slot-card.txt', import.meta.url), 'utf8') + '\n');
+  const json = await run([...scenario.argv, '--json'], scenario.routes);
+  assert.equal(json.exit, 0, json.output);
+  assert.deepEqual(JSON.parse(json.output), scenario.model);
+});
 test('bare URL inspect stdout is literal TOON golden; JSON identical; API ids are colon form', async () => {
   const scenario = goldenCases.inspect;
   const result = await run(scenario.argv, scenario.routes);

@@ -1,0 +1,34 @@
+file: 📓 Evolve Components
+node: 11864-165
+depth: 12
+variableNames: none-bound
+hidden: 1
+shapesOmitted: 0
+beyondLimit: 0
+instanceLayersSkipped: 5
+layers[18]{depth,id,type,name,size,layout,fill,stroke,radius,effect,text}:
+  0,11864-165,COMPONENT,Market Trade Value,null,null,null,null,null,null,null
+  1,11864-166,INSTANCE,Card,null,null,null,null,null,null,null
+  2,I11864-166;10805-3,SLOT,Sections,null,null,null,null,null,null,null
+  3,I11864-166;10805-3;11864-214,INSTANCE,Card Section,null,null,null,null,null,null,null
+  5,I11864-166;10805-3;11864-214;10809-9,SLOT,Actions,null,null,null,null,null,null,null
+  6,I11864-166;10805-3;11864-214;10809-9;11864-238,INSTANCE,Confidence,null,null,null,null,null,null,null
+  4,I11864-166;10805-3;11864-214;10809-40,SLOT,Body,null,null,null,null,null,null,null
+  5,I11864-166;10805-3;11864-214;10809-40;11864-242,FRAME,Studio,null,null,null,null,null,null,null
+  6,I11864-166;10805-3;11864-214;10809-40;11864-244,FRAME,Hero,null,null,null,null,null,null,null
+  7,I11864-166;10805-3;11864-214;10809-40;11864-246,TEXT,Text,95x32,null,null,null,null,null,Inter 700 24/32 ls=-0.5
+  6,I11864-166;10805-3;11864-214;10809-40;11864-250,FRAME,Chart,null,null,null,null,null,null,null
+  7,I11864-166;10805-3;11864-214;10809-40;11864-264,FRAME,Plot row,null,null,null,null,null,null,null
+  8,I11864-166;10805-3;11864-214;10809-40;11864-275,FRAME,Plot,null,null,null,null,null,null,null
+  9,I11864-166;10805-3;11864-214;10809-40;11864-286,RECTANGLE,Bar,null,null,null,null,null,null,null
+  6,I11864-166;10805-3;11864-214;10809-40;11864-454,FRAME,Legend,null,null,null,null,null,null,null
+  7,I11864-166;10805-3;11864-214;10809-40;11864-456,FRAME,Keys,null,null,null,null,null,null,null
+  8,I11864-166;10805-3;11864-214;10809-40;11864-459,FRAME,Likely range,null,null,null,null,null,null,null
+  9,I11864-166;10805-3;11864-214;10809-40;11864-462,TEXT,Text,null,null,null,null,null,null,null
+tokens: []
+instances[3]{id,component,variant,props}:
+  11864-166,Card,Surface=Default,Sections=null
+  I11864-166;10805-3;11864-214,Card Section,null,Body=null;Actions=null;Title=Market trade value
+  I11864-166;10805-3;11864-214;10809-9;11864-238,Badge,null,Content=High confidence
+imageFills: 0
+help[2]: Run `figma-axi spec ubPyiVQXR9Fr0KBrmAdBfg --node 11864-166` for the layers inside an instance,Run `figma-axi render ubPyiVQXR9Fr0KBrmAdBfg --node 11864-165` to see this frame
