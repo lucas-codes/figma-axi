@@ -4,9 +4,19 @@ import {readFileSync} from 'node:fs';
 import {run, type Reply} from './harness.ts';
 import {goldenCases, designFrame, variableNames, unboundFrame, colorId} from './fixtures/design.ts';
 import {slotFrame} from './fixtures/slots.ts';
+import {goldenCases as restSlotCases} from './fixtures/market-trade-value.ts';
 const nodesUrl = 'https://api.figma.com/v1/files/AbC123xyz456/nodes?ids=1%3A2&depth=5';
 const variablesUrl = 'https://api.figma.com/v1/files/AbC123xyz456/variables/local';
 const argv = ['spec', 'AbC123xyz456', '--node', '1-2', '--json'];
+test('captured REST component spec accepts SLOT guid properties and lists nested content in TOON and JSON', async () => {
+  const scenario = restSlotCases['spec-rest-slot-component'];
+  const toon = await run(scenario.argv, scenario.routes);
+  assert.equal(toon.exit, 0, toon.output);
+  assert.equal(toon.output, readFileSync(new URL('./goldens/spec-rest-slot-component.txt', import.meta.url), 'utf8') + '\n');
+  const json = await run([...scenario.argv, '--json'], scenario.routes);
+  assert.equal(json.exit, 0, json.output);
+  assert.deepEqual(JSON.parse(json.output), scenario.model);
+});
 for (const [name, scenario] of Object.entries(goldenCases)) test(name + ' produces the literal golden and normalized JSON', async () => {
   const toon = await run(scenario.argv, scenario.routes);
   assert.equal(toon.exit, 0);

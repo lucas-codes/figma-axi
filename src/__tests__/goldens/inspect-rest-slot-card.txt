@@ -1,0 +1,26 @@
+file: 📓 Evolve Components
+node: 11864-166
+depth: 14
+hidden: 1
+shapesOmitted: 0
+beyondLimit: 0
+textsTruncated: 0
+nodes[17]{depth,id,type,name,size,content}:
+  0,11864-166,INSTANCE,Card,null,null
+  1,I11864-166;10805-3,SLOT,Sections,null,null
+  2,I11864-166;10805-3;11864-214,INSTANCE,Card Section,null,"Surface=Default, State=Default, Expanded=False | Market trade value"
+  4,I11864-166;10805-3;11864-214;10809-9,SLOT,Actions,null,null
+  5,I11864-166;10805-3;11864-214;10809-9;11864-238,INSTANCE,Confidence,null,"Tone=Positive, Size=Medium, Bold=False, Rounded=False, Icon=False | High confidence"
+  3,I11864-166;10805-3;11864-214;10809-40,SLOT,Body,null,null
+  4,I11864-166;10805-3;11864-214;10809-40;11864-242,FRAME,Studio,null,null
+  5,I11864-166;10805-3;11864-214;10809-40;11864-244,FRAME,Hero,null,null
+  6,I11864-166;10805-3;11864-214;10809-40;11864-246,TEXT,Text,95x32,"$21,800"
+  5,I11864-166;10805-3;11864-214;10809-40;11864-250,FRAME,Chart,null,null
+  6,I11864-166;10805-3;11864-214;10809-40;11864-264,FRAME,Plot row,null,null
+  7,I11864-166;10805-3;11864-214;10809-40;11864-275,FRAME,Plot,null,null
+  8,I11864-166;10805-3;11864-214;10809-40;11864-286,RECTANGLE,Bar,null,null
+  5,I11864-166;10805-3;11864-214;10809-40;11864-454,FRAME,Legend,null,null
+  6,I11864-166;10805-3;11864-214;10809-40;11864-456,FRAME,Keys,null,null
+  7,I11864-166;10805-3;11864-214;10809-40;11864-459,FRAME,Likely range,null,null
+  8,I11864-166;10805-3;11864-214;10809-40;11864-462,TEXT,Text,null,Likely range
+help[1]: Run `figma-axi render ubPyiVQXR9Fr0KBrmAdBfg --node 11864-166` to see this frame
