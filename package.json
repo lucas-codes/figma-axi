@@ -39,7 +39,7 @@
     "skill:check": "node src/skill.ts --check"
   },
   "devDependencies": {
-    "typescript": "5.9.3",
+    "typescript": "7.0.2",
     "@types/node": "24.13.5",
     "@toon-format/toon": "4.1.1",
     "@figma/rest-api-spec": "0.44.0",
