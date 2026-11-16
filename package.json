@@ -24,10 +24,10 @@
     "README.md"
   ],
   "engines": {
-    "node": ">=22"
+    "node": "v26.13.1"
   },
   "volta": {
-    "node": "24.21.0"
+    "node": "24.22.3"
   },
   "scripts": {
     "build": "bun build src/index.ts --target=node --outdir=dist && chmod +x bin/figma-axi",
@@ -40,9 +40,9 @@
   },
   "devDependencies": {
     "typescript": "5.9.3",
-    "@types/node": "24.13.5",
-    "@toon-format/toon": "4.1.1",
-    "@figma/rest-api-spec": "0.44.0",
+    "@types/node": "24.19.2",
+    "@toon-format/toon": "4.4.0",
+    "@figma/rest-api-spec": "0.47.0",
     "axi-axi": "0.1.0"
   }
 }
