@@ -27,7 +27,7 @@
     "node": ">=22"
   },
   "volta": {
-    "node": "24.21.0"
+    "node": "26.13.1"
   },
   "scripts": {
     "build": "bun build src/index.ts --target=node --outdir=dist && chmod +x bin/figma-axi",
@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "typescript": "5.9.3",
-    "@types/node": "24.13.5",
+    "@types/node": "26.6.6",
     "@toon-format/toon": "4.1.1",
     "@figma/rest-api-spec": "0.44.0",
     "axi-axi": "0.1.0"
